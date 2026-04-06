@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       scrapePage(String(rightUrl).trim()),
     ]);
 
-    const prompt = `You are an expert SEO strategist comparing two blog or content pages head-to-head.
+    const prompt = `You are an expert SEO strategist comparing two blog or content pages head-to-head. Be extremely concise — no unnecessary elaboration.
 
 Page A
 URL: ${leftPage.url}
@@ -128,27 +128,27 @@ Return ONLY valid JSON in this exact shape:
     "title": "page A title",
     "nickname": "Page A",
     "overallScore": 0,
-    "strengths": ["3 concise strengths"],
-    "weaknesses": ["3 concise weaknesses"]
+    "strengths": ["3 strengths, max 10 words each"],
+    "weaknesses": ["3 weaknesses, max 10 words each"]
   },
   "right": {
     "url": "page B url",
     "title": "page B title",
     "nickname": "Page B",
     "overallScore": 0,
-    "strengths": ["3 concise strengths"],
-    "weaknesses": ["3 concise weaknesses"]
+    "strengths": ["3 strengths, max 10 words each"],
+    "weaknesses": ["3 weaknesses, max 10 words each"]
   },
   "winner": "left | right | tie",
-  "verdict": "2-4 sentence summary explaining who wins and why",
-  "quickTakeaways": ["up to 5 concise strategic takeaways"],
+  "verdict": "1-2 sentence summary explaining who wins and why",
+  "quickTakeaways": ["up to 4 takeaways, 1 sentence each"],
   "metrics": {
-    "topicalCoverage": { "leftScore": 0, "rightScore": 0, "explanation": "why" },
-    "searchIntentFit": { "leftScore": 0, "rightScore": 0, "explanation": "why" },
-    "clarityReadability": { "leftScore": 0, "rightScore": 0, "explanation": "why" },
-    "metadataQuality": { "leftScore": 0, "rightScore": 0, "explanation": "why" },
-    "trustSignals": { "leftScore": 0, "rightScore": 0, "explanation": "why" },
-    "keywordOpportunity": { "leftScore": 0, "rightScore": 0, "explanation": "why" }
+    "topicalCoverage": { "leftScore": 0, "rightScore": 0, "explanation": "1 sentence, under 15 words" },
+    "searchIntentFit": { "leftScore": 0, "rightScore": 0, "explanation": "1 sentence, under 15 words" },
+    "clarityReadability": { "leftScore": 0, "rightScore": 0, "explanation": "1 sentence, under 15 words" },
+    "metadataQuality": { "leftScore": 0, "rightScore": 0, "explanation": "1 sentence, under 15 words" },
+    "trustSignals": { "leftScore": 0, "rightScore": 0, "explanation": "1 sentence, under 15 words" },
+    "keywordOpportunity": { "leftScore": 0, "rightScore": 0, "explanation": "1 sentence, under 15 words" }
   }
 }
 
@@ -160,7 +160,7 @@ Guidance:
 
     const rawText = await generateGeminiText(model, prompt, key, {
       temperature: 0.4,
-      maxOutputTokens: 4096,
+      maxOutputTokens: 2048,
     });
 
     const parsed = parseJsonSafely<RawBattleResult>(rawText);

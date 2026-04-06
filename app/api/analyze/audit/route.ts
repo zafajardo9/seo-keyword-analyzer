@@ -1,4 +1,9 @@
-import { clampScore, generateGeminiText, getGeminiApiKey, parseJsonSafely } from "@/lib/gemini";
+import {
+  clampScore,
+  generateGeminiText,
+  getGeminiApiKey,
+  parseJsonSafely,
+} from "@/lib/gemini";
 import { PageAudit, ScoreDimension, ScoreDimensionKey } from "@/lib/types";
 
 const DIMENSION_LABELS: Record<ScoreDimensionKey, string> = {
@@ -30,15 +35,38 @@ interface RawAuditResponse {
 }
 
 const SCORE_ALIASES: Record<ScoreDimensionKey, string[]> = {
-  topicalRelevance: ["topicalRelevance", "topical_relevance", "relevance", "topicRelevance"],
-  searchIntentMatch: ["searchIntentMatch", "search_intent_match", "intentMatch", "searchIntent"],
+  topicalRelevance: [
+    "topicalRelevance",
+    "topical_relevance",
+    "relevance",
+    "topicRelevance",
+  ],
+  searchIntentMatch: [
+    "searchIntentMatch",
+    "search_intent_match",
+    "intentMatch",
+    "searchIntent",
+  ],
   topicalDepth: ["topicalDepth", "topical_depth", "contentDepth", "depth"],
-  clarityReadability: ["clarityReadability", "clarity_readability", "readability", "clarity"],
-  metadataQuality: ["metadataQuality", "metadata_quality", "metaQuality", "metadata"],
+  clarityReadability: [
+    "clarityReadability",
+    "clarity_readability",
+    "readability",
+    "clarity",
+  ],
+  metadataQuality: [
+    "metadataQuality",
+    "metadata_quality",
+    "metaQuality",
+    "metadata",
+  ],
   trustSignals: ["trustSignals", "trust_signals", "trust", "authoritySignals"],
 };
 
-function getObjectValue(record: Record<string, unknown> | null | undefined, aliases: string[]): unknown {
+function getObjectValue(
+  record: Record<string, unknown> | null | undefined,
+  aliases: string[],
+): unknown {
   if (!record) return undefined;
   for (const alias of aliases) {
     if (alias in record) return record[alias];
@@ -82,7 +110,9 @@ function toDimensions(raw: RawAuditResponse): ScoreDimension[] {
   return (Object.keys(DIMENSION_LABELS) as ScoreDimensionKey[])
     .map((key) => {
       const aliases = SCORE_ALIASES[key];
-      const scoreSource = getObjectValue(scoresRecord, aliases) ?? getObjectValue(topLevelRecord, aliases);
+      const scoreSource =
+        getObjectValue(scoresRecord, aliases) ??
+        getObjectValue(topLevelRecord, aliases);
       const score = parseScore(scoreSource);
       const explanation = parseExplanation(scoreSource);
 
@@ -93,12 +123,17 @@ function toDimensions(raw: RawAuditResponse): ScoreDimension[] {
         explanation,
       };
     })
-    .filter((dimension) => dimension.score > 0 || dimension.explanation.length > 0);
+    .filter(
+      (dimension) => dimension.score > 0 || dimension.explanation.length > 0,
+    );
 }
 
 function normalizeList(value: unknown, fallback: string): string[] {
   if (!Array.isArray(value)) return [fallback];
-  const items = value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  const items = value.filter(
+    (item): item is string =>
+      typeof item === "string" && item.trim().length > 0,
+  );
   return items.length > 0 ? items : [fallback];
 }
 
@@ -110,7 +145,8 @@ function normalizeAudit(raw: RawAuditResponse | null): PageAudit | null {
 
   const parsedOverallScore = parseScore(raw.overallScore);
   const fallbackOverallScore = Math.round(
-    dimensions.reduce((sum, dimension) => sum + dimension.score, 0) / dimensions.length
+    dimensions.reduce((sum, dimension) => sum + dimension.score, 0) /
+      dimensions.length,
   );
 
   return {
@@ -122,9 +158,18 @@ function normalizeAudit(raw: RawAuditResponse | null): PageAudit | null {
     verdict: String(raw.verdict ?? "No summary available."),
     dimensions,
     strengths: normalizeList(raw.strengths, "No clear strengths identified."),
-    weaknesses: normalizeList(raw.weaknesses, "No major weaknesses identified."),
-    missingSubtopics: normalizeList(raw.missingSubtopics, "No missing subtopics identified."),
-    priorityActions: normalizeList(raw.priorityActions, "No priority actions suggested."),
+    weaknesses: normalizeList(
+      raw.weaknesses,
+      "No major weaknesses identified.",
+    ),
+    missingSubtopics: normalizeList(
+      raw.missingSubtopics,
+      "No missing subtopics identified.",
+    ),
+    priorityActions: normalizeList(
+      raw.priorityActions,
+      "No priority actions suggested.",
+    ),
   };
 }
 
@@ -134,7 +179,10 @@ export async function POST(request: Request) {
     const { scrapedContent, model } = await request.json();
 
     if (!scrapedContent || !model) {
-      return Response.json({ error: "scrapedContent and model are required" }, { status: 400 });
+      return Response.json(
+        { error: "scrapedContent and model are required" },
+        { status: 400 },
+      );
     }
 
     const { title, description, headings, bodyText, url } = scrapedContent;
@@ -148,7 +196,7 @@ export async function POST(request: Request) {
       `Body Content: ${bodyText.slice(0, 3500)}`,
     ].join("\n");
 
-    const prompt = `You are an expert SEO content auditor. Read the page content carefully, determine what type of page it is, what niche or field it belongs to, who it is for, and what search/user intent it serves.
+    const prompt = `You are an expert SEO content auditor. Be extremely concise — no unnecessary elaboration. Read the page content, determine the page type, niche, audience, and search intent.
 
 Analyze the following page:
 ${contentSummary}
@@ -157,22 +205,22 @@ Return ONLY valid JSON using this exact structure:
 {
   "pageType": "blog post | landing page | service page | social page | firm page | product page | other",
   "industry": "short niche or field name",
-  "primaryAudience": "who this page appears to target",
+  "primaryAudience": "who this page targets (under 10 words)",
   "primaryIntent": "informational | commercial investigation | transactional | navigational | lead generation | brand awareness | mixed",
   "overallScore": 0,
-  "verdict": "2-3 sentence summary of the page's SEO quality and content fit",
+  "verdict": "1-2 sentence summary of the page's SEO quality and content fit",
   "scores": {
-    "topicalRelevance": { "score": 0, "explanation": "why" },
-    "searchIntentMatch": { "score": 0, "explanation": "why" },
-    "topicalDepth": { "score": 0, "explanation": "why" },
-    "clarityReadability": { "score": 0, "explanation": "why" },
-    "metadataQuality": { "score": 0, "explanation": "why" },
-    "trustSignals": { "score": 0, "explanation": "why" }
+    "topicalRelevance": { "score": 0, "explanation": "1 sentence, under 15 words" },
+    "searchIntentMatch": { "score": 0, "explanation": "1 sentence, under 15 words" },
+    "topicalDepth": { "score": 0, "explanation": "1 sentence, under 15 words" },
+    "clarityReadability": { "score": 0, "explanation": "1 sentence, under 15 words" },
+    "metadataQuality": { "score": 0, "explanation": "1 sentence, under 15 words" },
+    "trustSignals": { "score": 0, "explanation": "1 sentence, under 15 words" }
   },
-  "strengths": ["3 concise strengths"],
-  "weaknesses": ["3 concise weaknesses"],
-  "missingSubtopics": ["up to 5 missing subtopics or supporting angles"],
-  "priorityActions": ["up to 5 concrete next actions to improve SEO relevance"]
+  "strengths": ["3 strengths, max 10 words each"],
+  "weaknesses": ["3 weaknesses, max 10 words each"],
+  "missingSubtopics": ["up to 4 short phrases only"],
+  "priorityActions": ["up to 4 actions, 1 sentence each"]
 }
 
 Scoring guidance:
@@ -183,14 +231,17 @@ Scoring guidance:
 
     const rawText = await generateGeminiText(model, prompt, key, {
       temperature: 0.35,
-      maxOutputTokens: 4096,
+      maxOutputTokens: 2048,
     });
 
     const parsed = parseJsonSafely<RawAuditResponse>(rawText);
     const audit = normalizeAudit(parsed);
 
     if (!audit) {
-      return Response.json({ error: "Failed to parse a valid audit response from AI" }, { status: 500 });
+      return Response.json(
+        { error: "Failed to parse a valid audit response from AI" },
+        { status: 500 },
+      );
     }
 
     return Response.json({ audit });

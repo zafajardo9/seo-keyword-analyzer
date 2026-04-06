@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
     const keywordList = Array.isArray(keywords) ? keywords.slice(0, 30).join(", ") : "";
 
-    const prompt = `You are an expert SEO content strategist. Based on the following web page content and extracted keywords, provide 6 detailed blog content recommendations.
+    const prompt = `You are an expert SEO content strategist. Be extremely concise — no unnecessary elaboration. Based on the following web page content and extracted keywords, provide 5 blog content recommendations.
 
 Web Page Content:
 ${contentSummary}
@@ -38,9 +38,9 @@ Extracted Keywords: ${keywordList}
 
 For each recommendation, provide:
 1. A compelling blog topic title
-2. Why this topic is valuable for SEO (reasoning)
-3. 3-5 target keywords to focus on
-4. A sample blog introduction paragraph (2-3 sentences, ready to use)
+2. Why this topic is valuable for SEO (reasoning, 1-2 sentences max)
+3. 3-4 target keywords to focus on
+4. A sample blog introduction (1-2 sentences only)
 
 Return ONLY a valid JSON array with this exact structure, no markdown, no explanation:
 [
@@ -54,7 +54,7 @@ Return ONLY a valid JSON array with this exact structure, no markdown, no explan
 
     const rawText = await generateGeminiText(model, prompt, key, {
       temperature: 0.7,
-      maxOutputTokens: 4096,
+      maxOutputTokens: 2048,
     });
 
     const parsed = parseJsonSafely<Recommendation[]>(rawText);

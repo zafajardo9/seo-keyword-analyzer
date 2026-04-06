@@ -93,7 +93,7 @@ ${bodySummary.slice(0, 9000)}`;
       contentForAudit = trimmedDraft.slice(0, 9000);
     }
 
-    const prompt = `You are an expert SEO editor and search intent evaluator.
+    const prompt = `You are an expert SEO editor and search intent evaluator. Be extremely concise — no unnecessary elaboration.
 
 Target keyword: ${String(keyword).trim()}
 
@@ -106,11 +106,11 @@ Return ONLY valid JSON using this exact structure:
   "detectedIntent": "informational | commercial investigation | transactional | navigational | mixed",
   "intentMatchScore": 0,
   "relevanceScore": 0,
-  "verdict": "2-3 sentence verdict on how well the draft matches the keyword and likely search intent",
-  "missingSubtopics": ["up to 6 missing supporting subtopics"],
-  "offTopicSections": ["up to 5 sections, ideas, or patterns that feel weak or off-topic"],
-  "headingSuggestions": ["up to 6 improved heading or section ideas"],
-  "rewriteSuggestions": ["up to 6 concrete rewrite suggestions"],
+  "verdict": "1-2 sentence verdict on how well the draft matches the keyword and likely search intent",
+  "missingSubtopics": ["up to 5 short phrases only"],
+  "offTopicSections": ["up to 4 short phrases only"],
+  "headingSuggestions": ["up to 5 short heading ideas"],
+  "rewriteSuggestions": ["up to 5 suggestions, 1 sentence each"],
   "improvedTitle": "SEO-friendly improved title",
   "improvedMetaDescription": "SEO-friendly meta description under 160 characters"
 }
@@ -125,7 +125,7 @@ Scoring guidance:
 
     const rawText = await generateGeminiText(model, prompt, key, {
       temperature: 0.45,
-      maxOutputTokens: 4096,
+      maxOutputTokens: 2048,
     });
 
     const parsed = parseJsonSafely<RawContentRelevanceAudit>(rawText);
