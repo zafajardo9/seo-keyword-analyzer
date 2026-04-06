@@ -1,11 +1,8 @@
+import { getGeminiApiKey } from "@/lib/gemini";
+
 export async function GET() {
-  const key = process.env.GEMINI_API_KEY;
-
-  if (!key) {
-    return Response.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });
-  }
-
   try {
+    const key = getGeminiApiKey();
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`,
       { headers: { "Content-Type": "application/json" } }
@@ -29,6 +26,7 @@ export async function GET() {
 
     return Response.json({ models });
   } catch (err) {
-    return Response.json({ error: String(err) }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    return Response.json({ error: message }, { status: 500 });
   }
 }

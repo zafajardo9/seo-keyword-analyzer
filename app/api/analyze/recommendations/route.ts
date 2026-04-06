@@ -1,3 +1,5 @@
+import { generateGeminiText, getGeminiApiKey, parseJsonSafely } from "@/lib/gemini";
+
 export interface Recommendation {
   topic: string;
   reasoning: string;
@@ -6,13 +8,8 @@ export interface Recommendation {
 }
 
 export async function POST(request: Request) {
-  const key = process.env.GEMINI_API_KEY;
-
-  if (!key) {
-    return Response.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });
-  }
-
   try {
+    const key = getGeminiApiKey();
     const { scrapedContent, keywords, model } = await request.json();
 
     if (!scrapedContent || !model) {
@@ -55,55 +52,25 @@ Return ONLY a valid JSON array with this exact structure, no markdown, no explan
   }
 ]`;
 
-    const modelId = model.replace("models/", "");
+    const rawText = await generateGeminiText(model, prompt, key, {
+      temperature: 0.7,
+      maxOutputTokens: 4096,
+    });
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${key}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 4096,
-          },
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      const err = await res.text();
-      return Response.json({ error: `Gemini API error: ${err}` }, { status: res.status });
-    }
-
-    const data = await res.json();
-    const rawText: string =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-
-    const cleaned = rawText
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
-      .trim();
-
-    let recommendations: Recommendation[] = [];
-    try {
-      const parsed = JSON.parse(cleaned);
-      if (Array.isArray(parsed)) {
-        recommendations = parsed.filter(
+    const parsed = parseJsonSafely<Recommendation[]>(rawText);
+    const recommendations = Array.isArray(parsed)
+      ? parsed.filter(
           (r) =>
             typeof r.topic === "string" &&
             typeof r.reasoning === "string" &&
             Array.isArray(r.targetKeywords) &&
             typeof r.sampleContent === "string"
-        );
-      }
-    } catch {
-      recommendations = [];
-    }
+        )
+      : [];
 
     return Response.json({ recommendations });
   } catch (err) {
-    return Response.json({ error: String(err) }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    return Response.json({ error: message }, { status: 500 });
   }
 }

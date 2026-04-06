@@ -2,16 +2,17 @@
 
 import * as React from "react";
 import { FilePdf, CircleNotch } from "@phosphor-icons/react";
-import { ScrapedContent, Recommendation } from "@/lib/types";
+import { PageAudit, ScrapedContent, Recommendation } from "@/lib/types";
 
 interface PdfExportProps {
   scrapedContent: ScrapedContent;
+  pageAudit: PageAudit | null;
   keywords: string[];
   recommendations: Recommendation[];
   model: string;
 }
 
-export function PdfExport({ scrapedContent, keywords, recommendations, model }: PdfExportProps) {
+export function PdfExport({ scrapedContent, pageAudit, keywords, recommendations, model }: PdfExportProps) {
   const [generating, setGenerating] = React.useState(false);
 
   async function handleExport() {
@@ -57,6 +58,61 @@ export function PdfExport({ scrapedContent, keywords, recommendations, model }: 
           paddingHorizontal: 5,
           paddingVertical: 2,
           color: "#333333",
+        },
+        auditGrid: {
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: 8,
+          marginBottom: 12,
+        },
+        auditCard: {
+          width: "48%",
+          border: "0.5px solid #e0e0e0",
+          padding: 8,
+        },
+        auditLabel: {
+          fontSize: 8,
+          color: "#777777",
+          textTransform: "uppercase",
+          marginBottom: 3,
+        },
+        auditValue: {
+          fontSize: 10,
+          fontFamily: "Helvetica-Bold",
+          color: "#222222",
+        },
+        scoreList: {
+          marginTop: 8,
+          gap: 5,
+        },
+        scoreRow: {
+          marginBottom: 6,
+        },
+        scoreLabel: {
+          fontSize: 9,
+          fontFamily: "Helvetica-Bold",
+          marginBottom: 2,
+          color: "#333333",
+        },
+        scoreExplanation: {
+          fontSize: 8,
+          color: "#666666",
+          lineHeight: 1.35,
+        },
+        listSection: {
+          marginTop: 10,
+        },
+        listTitle: {
+          fontSize: 9,
+          fontFamily: "Helvetica-Bold",
+          marginBottom: 4,
+          color: "#333333",
+        },
+        listItem: {
+          fontSize: 8,
+          color: "#555555",
+          marginBottom: 3,
+          lineHeight: 1.35,
         },
         recCard: {
           marginBottom: 14,
@@ -124,6 +180,57 @@ export function PdfExport({ scrapedContent, keywords, recommendations, model }: 
                 </View>
               ) : null}
             </View>
+
+            {pageAudit ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>AI SEO Audit</Text>
+                <View style={styles.auditGrid}>
+                  <View style={styles.auditCard}>
+                    <Text style={styles.auditLabel}>Overall Score</Text>
+                    <Text style={styles.auditValue}>{pageAudit.overallScore} / 100</Text>
+                  </View>
+                  <View style={styles.auditCard}>
+                    <Text style={styles.auditLabel}>Page Type</Text>
+                    <Text style={styles.auditValue}>{pageAudit.pageType}</Text>
+                  </View>
+                  <View style={styles.auditCard}>
+                    <Text style={styles.auditLabel}>Niche / Field</Text>
+                    <Text style={styles.auditValue}>{pageAudit.industry}</Text>
+                  </View>
+                  <View style={styles.auditCard}>
+                    <Text style={styles.auditLabel}>Primary Intent</Text>
+                    <Text style={styles.auditValue}>{pageAudit.primaryIntent}</Text>
+                  </View>
+                </View>
+                <Text style={styles.recReasoning}>{pageAudit.verdict}</Text>
+                <View style={styles.scoreList}>
+                  {pageAudit.dimensions.map((dimension) => (
+                    <View key={dimension.key} style={styles.scoreRow}>
+                      <Text style={styles.scoreLabel}>
+                        {dimension.label}: {dimension.score}/100
+                      </Text>
+                      <Text style={styles.scoreExplanation}>{dimension.explanation}</Text>
+                    </View>
+                  ))}
+                </View>
+                <View style={styles.listSection}>
+                  <Text style={styles.listTitle}>Priority Actions</Text>
+                  {pageAudit.priorityActions.map((item, index) => (
+                    <Text key={`priority-${index}`} style={styles.listItem}>
+                      • {item}
+                    </Text>
+                  ))}
+                </View>
+                <View style={styles.listSection}>
+                  <Text style={styles.listTitle}>Missing Subtopics</Text>
+                  {pageAudit.missingSubtopics.map((item, index) => (
+                    <Text key={`subtopic-${index}`} style={styles.listItem}>
+                      • {item}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+            ) : null}
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>

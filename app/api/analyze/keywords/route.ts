@@ -1,11 +1,8 @@
+import { cleanJsonText, generateGeminiText, getGeminiApiKey } from "@/lib/gemini";
+
 export async function POST(request: Request) {
-  const key = process.env.GEMINI_API_KEY;
-
-  if (!key) {
-    return Response.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });
-  }
-
   try {
+    const key = getGeminiApiKey();
     const { scrapedContent, model } = await request.json();
 
     if (!scrapedContent || !model) {
@@ -39,38 +36,14 @@ Instructions:
 Example output format:
 ["keyword one", "long tail keyword phrase", "another keyword"]`;
 
-    const modelId = model.replace("models/", "");
+    const rawText = await generateGeminiText(model, prompt, key, {
+      temperature: 0.3,
+      maxOutputTokens: 2048,
+    });
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${key}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 2048,
-          },
-        }),
-      }
-    );
-
-    if (!res.ok) {
-      const err = await res.text();
-      return Response.json({ error: `Gemini API error: ${err}` }, { status: res.status });
-    }
-
-    const data = await res.json();
-    const rawText: string =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-
-    const cleaned = rawText
-      .replace(/```json\n?/g, "")
-      .replace(/```\n?/g, "")
-      .trim();
-
+    const cleaned = cleanJsonText(rawText);
     let keywords: string[] = [];
+
     try {
       const parsed = JSON.parse(cleaned);
       if (Array.isArray(parsed)) {
@@ -85,6 +58,8 @@ Example output format:
 
     return Response.json({ keywords });
   } catch (err) {
-    return Response.json({ error: String(err) }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    const status = message.includes("GEMINI_API_KEY") ? 500 : 500;
+    return Response.json({ error: message }, { status });
   }
 }

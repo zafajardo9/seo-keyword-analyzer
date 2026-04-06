@@ -1,4 +1,4 @@
-import { ScrapedContent, Recommendation } from "@/lib/types";
+import { PageAudit, ScrapedContent, Recommendation } from "@/lib/types";
 
 const CACHE_KEY_PREFIX = "seo_analysis_";
 const TTL_MS = 30 * 60 * 1000; // 30 minutes
@@ -6,6 +6,7 @@ const TTL_MS = 30 * 60 * 1000; // 30 minutes
 export interface CacheEntry {
   url: string;
   scrapedContent: ScrapedContent;
+  pageAudit: PageAudit | null;
   keywords: string[];
   recommendations: Recommendation[];
   model: string;
@@ -30,7 +31,16 @@ export function getCachedAnalysis(url: string): CacheEntry | null {
   try {
     const raw = localStorage.getItem(cacheKey(url));
     if (!raw) return null;
-    const entry: CacheEntry = JSON.parse(raw);
+    const parsed = JSON.parse(raw) as Partial<CacheEntry>;
+    const entry: CacheEntry = {
+      url: parsed.url ?? url,
+      scrapedContent: parsed.scrapedContent as ScrapedContent,
+      pageAudit: parsed.pageAudit ?? null,
+      keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
+      recommendations: Array.isArray(parsed.recommendations) ? parsed.recommendations : [],
+      model: parsed.model ?? "",
+      timestamp: typeof parsed.timestamp === "number" ? parsed.timestamp : 0,
+    };
     if (Date.now() - entry.timestamp > TTL_MS) {
       localStorage.removeItem(cacheKey(url));
       return null;

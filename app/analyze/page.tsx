@@ -3,14 +3,15 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Sparkle, Warning, Globe, ArrowCounterClockwise, Lightning, ArrowClockwise } from "@phosphor-icons/react";
+import { ArrowLeft, Sparkle, Warning, Globe, ArrowCounterClockwise, Lightning, ArrowClockwise, Notebook, Sword } from "@phosphor-icons/react";
 import { StepIndicator } from "@/components/step-indicator";
 import { UrlInput } from "@/components/url-input";
 import { KeywordsPanel } from "@/components/keywords-panel";
 import { RecommendationsPanel } from "@/components/recommendations-panel";
+import { PageAuditPanel } from "@/components/page-audit-panel";
 import { ModelSelector, getStoredModel } from "@/components/model-selector";
 import { PdfExport } from "@/components/pdf-export";
-import { ScrapedContent, Recommendation } from "@/lib/types";
+import { PageAudit, ScrapedContent, Recommendation } from "@/lib/types";
 import {
   getCachedAnalysis,
   setCachedAnalysis,
@@ -32,8 +33,10 @@ export default function AnalyzePage() {
   const [model, setModel] = React.useState<string>("");
   const [scraping, setScraping] = React.useState(false);
   const [scrapedContent, setScrapedContent] = React.useState<ScrapedContent | null>(null);
+  const [pageAudit, setPageAudit] = React.useState<PageAudit | null>(null);
   const [keywords, setKeywords] = React.useState<string[]>([]);
   const [recommendations, setRecommendations] = React.useState<Recommendation[]>([]);
+  const [auditLoading, setAuditLoading] = React.useState(false);
   const [keywordsLoading, setKeywordsLoading] = React.useState(false);
   const [recsLoading, setRecsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -56,6 +59,7 @@ export default function AnalyzePage() {
     if (cached) {
       setCacheEntry(cached);
       setScrapedContent(cached.scrapedContent);
+      setPageAudit(cached.pageAudit);
       setKeywords(cached.keywords);
       setRecommendations(cached.recommendations);
       setStep(3);
@@ -94,10 +98,16 @@ export default function AnalyzePage() {
       }
 
       setKeywordsLoading(true);
+      setAuditLoading(true);
       setRecsLoading(true);
       setStep(3);
 
-      const [kwRes, recRes] = await Promise.all([
+      const [auditRes, kwRes, recRes] = await Promise.all([
+        fetch("/api/analyze/audit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scrapedContent: content, model: currentModel }),
+        }),
         fetch("/api/analyze/keywords", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -110,13 +120,26 @@ export default function AnalyzePage() {
         }),
       ]);
 
-      const [kwData, recData] = await Promise.all([kwRes.json(), recRes.json()]);
+      const [auditData, kwData, recData] = await Promise.all([
+        auditRes.json(),
+        kwRes.json(),
+        recRes.json(),
+      ]);
 
+      let finalAudit: PageAudit | null = null;
       let finalKeywords: string[] = [];
       let finalRecs: Recommendation[] = [];
 
+      if (auditData.error) {
+        setError((prev) => prev ?? `Audit error: ${auditData.error}`);
+      } else {
+        finalAudit = auditData.audit ?? null;
+        setPageAudit(finalAudit);
+      }
+      setAuditLoading(false);
+
       if (kwData.error) {
-        setError(`Keywords error: ${kwData.error}`);
+        setError((prev) => prev ?? `Keywords error: ${kwData.error}`);
       } else {
         finalKeywords = kwData.keywords ?? [];
         setKeywords(finalKeywords);
@@ -124,7 +147,7 @@ export default function AnalyzePage() {
       setKeywordsLoading(false);
 
       if (recData.error) {
-        setError(`Recommendations error: ${recData.error}`);
+        setError((prev) => prev ?? `Recommendations error: ${recData.error}`);
       } else {
         finalRecs = recData.recommendations ?? [];
         setRecommendations(finalRecs);
@@ -132,10 +155,11 @@ export default function AnalyzePage() {
       setRecsLoading(false);
 
       // --- save to cache ---
-      if (finalKeywords.length > 0 || finalRecs.length > 0) {
+      if (finalAudit || finalKeywords.length > 0 || finalRecs.length > 0) {
         setCachedAnalysis({
           url,
           scrapedContent: content,
+          pageAudit: finalAudit,
           keywords: finalKeywords,
           recommendations: finalRecs,
           model: currentModel,
@@ -145,6 +169,7 @@ export default function AnalyzePage() {
     } catch (err) {
       setError(String(err));
       setScraping(false);
+      setAuditLoading(false);
       setKeywordsLoading(false);
       setRecsLoading(false);
       setStep(1);
@@ -160,13 +185,24 @@ export default function AnalyzePage() {
   function handleReset() {
     setStep(1);
     setScrapedContent(null);
+    setPageAudit(null);
     setKeywords([]);
     setRecommendations([]);
     setError(null);
     setScraping(false);
+    setAuditLoading(false);
     setKeywordsLoading(false);
     setRecsLoading(false);
   }
+
+  const relevanceHref =
+    step === 3 && scrapedContent?.url
+      ? `/relevance?url=${encodeURIComponent(scrapedContent.url)}`
+      : "/relevance";
+  const battleHref =
+    step === 3 && scrapedContent?.url
+      ? `/battle?left=${encodeURIComponent(scrapedContent.url)}`
+      : "/battle";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -187,6 +223,20 @@ export default function AnalyzePage() {
         </div>
         <div className="flex items-center gap-4">
           <ModelSelector onModelChange={setModel} />
+          <Link
+            href={relevanceHref}
+            className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Notebook size={12} />
+            Relevance Checker
+          </Link>
+          <Link
+            href={battleHref}
+            className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Sword size={12} />
+            Battle of Blogs
+          </Link>
           {step === 3 && (
             <button
               onClick={handleReset}
@@ -317,6 +367,8 @@ export default function AnalyzePage() {
                   </a>
                 </div>
 
+                <PageAuditPanel audit={pageAudit} loading={auditLoading} />
+
                 <div className={keywordsExpanded ? "flex flex-col gap-8" : "grid grid-cols-1 gap-8 lg:grid-cols-2"}>
                   <KeywordsPanel
                     keywords={keywords}
@@ -326,7 +378,7 @@ export default function AnalyzePage() {
                   <RecommendationsPanel recommendations={recommendations} loading={recsLoading} />
                 </div>
 
-                {!keywordsLoading && !recsLoading && (keywords.length > 0 || recommendations.length > 0) && (
+                {!auditLoading && !keywordsLoading && !recsLoading && (pageAudit || keywords.length > 0 || recommendations.length > 0) && (
                   <motion.div
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -334,14 +386,31 @@ export default function AnalyzePage() {
                     className="flex items-center justify-between border-t border-border pt-6"
                   >
                     <p className="font-mono text-xs text-muted-foreground">
-                      Analysis complete · {keywords.length} keywords · {recommendations.length} recommendations
+                      Analysis complete · Audit {pageAudit ? `${pageAudit.overallScore}/100` : "unavailable"} · {keywords.length} keywords · {recommendations.length} recommendations
                     </p>
-                    <PdfExport
-                      scrapedContent={scrapedContent}
-                      keywords={keywords}
-                      recommendations={recommendations}
-                      model={model}
-                    />
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={battleHref}
+                        className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+                      >
+                        <Sword size={13} />
+                        Open Battle
+                      </Link>
+                      <Link
+                        href={relevanceHref}
+                        className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+                      >
+                        <Notebook size={13} />
+                        Open In Relevance
+                      </Link>
+                      <PdfExport
+                        scrapedContent={scrapedContent}
+                        pageAudit={pageAudit}
+                        keywords={keywords}
+                        recommendations={recommendations}
+                        model={model}
+                      />
+                    </div>
                   </motion.div>
                 )}
               </motion.div>

@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { TextPlugin } from "gsap/TextPlugin";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Sparkle } from "@phosphor-icons/react";
+import { ArrowRight, Notebook, Sparkle, Sword } from "@phosphor-icons/react";
 import { ModelSelector } from "@/components/model-selector";
 import { cn } from "@/lib/utils";
 
@@ -147,16 +147,40 @@ export function HeroSection() {
           >
             <ModelSelector onModelChange={setModel} />
 
-            <Link
-              href="/analyze"
-              className={cn(
-                "flex items-center gap-2 border border-primary bg-primary px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:scale-95",
-                !model && "pointer-events-none opacity-50"
-              )}
-            >
-              Start Analyzing
-              <ArrowRight size={13} />
-            </Link>
+            <div className="flex flex-col items-center gap-3 sm:flex-row">
+              <Link
+                href="/analyze"
+                className={cn(
+                  "flex items-center gap-2 border border-primary bg-primary px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:scale-95",
+                  !model && "pointer-events-none opacity-50"
+                )}
+              >
+                Start Analyzing
+                <ArrowRight size={13} />
+              </Link>
+
+              <Link
+                href="/relevance"
+                className={cn(
+                  "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
+                  !model && "pointer-events-none opacity-50"
+                )}
+              >
+                Check Draft Relevance
+                <Notebook size={13} />
+              </Link>
+
+              <Link
+                href="/battle"
+                className={cn(
+                  "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
+                  !model && "pointer-events-none opacity-50"
+                )}
+              >
+                Battle Of Blogs
+                <Sword size={13} />
+              </Link>
+            </div>
             {!model && (
               <span className="font-mono text-[10px] text-muted-foreground">
                 Select a model above to continue
@@ -169,7 +193,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.8 }}
-          className="mt-24 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3"
+          className="mt-24 grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
         >
           {FEATURES.map((f, i) => (
             <motion.div
@@ -207,5 +231,15 @@ const FEATURES = [
     tag: "03 · Recommend",
     title: "Content Strategy",
     desc: "Get 6 ready-to-use blog recommendations with sample intro paragraphs and target keywords.",
+  },
+  {
+    tag: "04 · Verify",
+    title: "Relevance Checker",
+    desc: "Paste a draft and a target keyword to see if the content truly matches the intended search intent.",
+  },
+  {
+    tag: "05 · Compare",
+    title: "Battle of Blogs",
+    desc: "Put two blog pages head-to-head and let AI judge who wins on SEO, clarity, and content depth.",
   },
 ];

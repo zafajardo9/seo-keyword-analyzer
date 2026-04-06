@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SEO Keyword Analyzer — Powered by Gemini AI",
+  title: "SEO Audit & Content Relevance Analyzer — Powered by Gemini AI",
   description:
-    "Paste any URL to extract SEO keywords and get AI-powered content recommendations for your blog strategy.",
+    "Analyze any page for SEO quality, extract keywords, generate content recommendations, and audit draft relevance with Gemini AI.",
 };
 
 export default function RootLayout({
