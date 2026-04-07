@@ -99,8 +99,12 @@ export async function POST(request: Request) {
     }
 
     const [leftPage, rightPage] = await Promise.all([
-      scrapePage(String(leftUrl).trim()),
-      scrapePage(String(rightUrl).trim()),
+      scrapePage(String(leftUrl).trim()).catch((err) => {
+        throw new Error(`Left page is not parseable: ${err.message}`);
+      }),
+      scrapePage(String(rightUrl).trim()).catch((err) => {
+        throw new Error(`Right page is not parseable: ${err.message}`);
+      }),
     ]);
 
     const prompt = `You are an expert SEO strategist comparing two blog or content pages head-to-head. Be extremely concise — no unnecessary elaboration.

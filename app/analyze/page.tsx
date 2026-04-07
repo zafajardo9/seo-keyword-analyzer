@@ -3,7 +3,17 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Sparkle, Warning, Globe, ArrowCounterClockwise, Lightning, ArrowClockwise, Notebook, Sword } from "@phosphor-icons/react";
+import {
+  ArrowLeft,
+  Sparkle,
+  Warning,
+  Globe,
+  ArrowCounterClockwise,
+  Lightning,
+  ArrowClockwise,
+  Notebook,
+  Sword,
+} from "@phosphor-icons/react";
 import { StepIndicator } from "@/components/step-indicator";
 import { UrlInput } from "@/components/url-input";
 import { KeywordsPanel } from "@/components/keywords-panel";
@@ -32,10 +42,13 @@ export default function AnalyzePage() {
   const [step, setStep] = React.useState<Step>(1);
   const [model, setModel] = React.useState<string>("");
   const [scraping, setScraping] = React.useState(false);
-  const [scrapedContent, setScrapedContent] = React.useState<ScrapedContent | null>(null);
+  const [scrapedContent, setScrapedContent] =
+    React.useState<ScrapedContent | null>(null);
   const [pageAudit, setPageAudit] = React.useState<PageAudit | null>(null);
   const [keywords, setKeywords] = React.useState<string[]>([]);
-  const [recommendations, setRecommendations] = React.useState<Recommendation[]>([]);
+  const [recommendations, setRecommendations] = React.useState<
+    Recommendation[]
+  >([]);
   const [auditLoading, setAuditLoading] = React.useState(false);
   const [keywordsLoading, setKeywordsLoading] = React.useState(false);
   const [recsLoading, setRecsLoading] = React.useState(false);
@@ -106,17 +119,26 @@ export default function AnalyzePage() {
         fetch("/api/analyze/audit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ scrapedContent: content, model: currentModel }),
+          body: JSON.stringify({
+            scrapedContent: content,
+            model: currentModel,
+          }),
         }),
         fetch("/api/analyze/keywords", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ scrapedContent: content, model: currentModel }),
+          body: JSON.stringify({
+            scrapedContent: content,
+            model: currentModel,
+          }),
         }),
         fetch("/api/analyze/recommendations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ scrapedContent: content, model: currentModel }),
+          body: JSON.stringify({
+            scrapedContent: content,
+            model: currentModel,
+          }),
         }),
       ]);
 
@@ -218,7 +240,9 @@ export default function AnalyzePage() {
           <span className="text-border">|</span>
           <div className="flex items-center gap-1.5">
             <Sparkle size={13} weight="fill" className="text-primary" />
-            <span className="font-mono text-xs font-semibold">SEO Analyzer</span>
+            <span className="font-mono text-xs font-semibold">
+              SEO Analyzer
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -281,7 +305,8 @@ export default function AnalyzePage() {
                     Analyze a Web Page
                   </h1>
                   <p className="font-mono text-xs text-muted-foreground">
-                    Paste the URL of any blog post, landing page, or article you want to analyze.
+                    Paste the URL of any blog post, landing page, or article you
+                    want to analyze.
                   </p>
                 </div>
                 <UrlInput onSubmit={handleUrlSubmit} loading={scraping} />
@@ -301,15 +326,21 @@ export default function AnalyzePage() {
                   <div className="relative flex h-12 w-12 items-center justify-center border border-primary/30">
                     <motion.div
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                       className="h-5 w-5 border-2 border-transparent border-t-primary"
                       style={{ borderRadius: "50%" }}
                     />
                   </div>
                   <div className="flex flex-col items-center gap-1 text-center">
-                    <p className="font-mono text-sm font-semibold">Scraping page…</p>
+                    <p className="font-mono text-sm font-semibold">
+                      Scraping page…
+                    </p>
                     <p className="font-mono text-xs text-muted-foreground">
-                      Fetching and parsing the page content with Cheerio
+                      Fetching and parsing the page content
                     </p>
                   </div>
                 </div>
@@ -369,50 +400,69 @@ export default function AnalyzePage() {
 
                 <PageAuditPanel audit={pageAudit} loading={auditLoading} />
 
-                <div className={keywordsExpanded ? "flex flex-col gap-8" : "grid grid-cols-1 gap-8 lg:grid-cols-2"}>
+                <div
+                  className={
+                    keywordsExpanded
+                      ? "flex flex-col gap-8"
+                      : "grid grid-cols-1 gap-8 lg:grid-cols-2"
+                  }
+                >
                   <KeywordsPanel
                     keywords={keywords}
                     loading={keywordsLoading}
                     onViewChange={setKeywordsExpanded}
                   />
-                  <RecommendationsPanel recommendations={recommendations} loading={recsLoading} />
+                  <RecommendationsPanel
+                    recommendations={recommendations}
+                    loading={recsLoading}
+                  />
                 </div>
 
-                {!auditLoading && !keywordsLoading && !recsLoading && (pageAudit || keywords.length > 0 || recommendations.length > 0) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="flex items-center justify-between border-t border-border pt-6"
-                  >
-                    <p className="font-mono text-xs text-muted-foreground">
-                      Analysis complete · Audit {pageAudit ? `${pageAudit.overallScore}/100` : "unavailable"} · {keywords.length} keywords · {recommendations.length} recommendations
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <Link
-                        href={battleHref}
-                        className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-                      >
-                        <Sword size={13} />
-                        Open Battle
-                      </Link>
-                      <Link
-                        href={relevanceHref}
-                        className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-                      >
-                        <Notebook size={13} />
-                        Open In Relevance
-                      </Link>
-                      <PdfExport
-                        scrapedContent={scrapedContent}
-                        pageAudit={pageAudit}
-                        keywords={keywords}
-                        recommendations={recommendations}
-                        model={model}
-                      />
-                    </div>
-                  </motion.div>
-                )}
+                {!auditLoading &&
+                  !keywordsLoading &&
+                  !recsLoading &&
+                  (pageAudit ||
+                    keywords.length > 0 ||
+                    recommendations.length > 0) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="flex items-center justify-between border-t border-border pt-6"
+                    >
+                      <p className="font-mono text-xs text-muted-foreground">
+                        Analysis complete · Audit{" "}
+                        {pageAudit
+                          ? `${pageAudit.overallScore}/100`
+                          : "unavailable"}{" "}
+                        · {keywords.length} keywords · {recommendations.length}{" "}
+                        recommendations
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={battleHref}
+                          className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+                        >
+                          <Sword size={13} />
+                          Open Battle
+                        </Link>
+                        <Link
+                          href={relevanceHref}
+                          className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+                        >
+                          <Notebook size={13} />
+                          Open In Relevance
+                        </Link>
+                        <PdfExport
+                          scrapedContent={scrapedContent}
+                          pageAudit={pageAudit}
+                          keywords={keywords}
+                          recommendations={recommendations}
+                          model={model}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
               </motion.div>
             )}
           </AnimatePresence>
