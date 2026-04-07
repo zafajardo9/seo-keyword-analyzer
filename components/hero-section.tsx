@@ -61,11 +61,14 @@ export function HeroSection() {
         ease: "sine.inOut",
       });
     },
-    { scope: containerRef }
+    { scope: containerRef },
   );
 
   return (
-    <div ref={containerRef} className="relative flex min-h-screen flex-col overflow-hidden">
+    <div
+      ref={containerRef}
+      className="relative flex min-h-screen flex-col overflow-hidden"
+    >
       <div
         ref={bgRef}
         className="pointer-events-none absolute inset-0 -z-10 opacity-40"
@@ -123,7 +126,10 @@ export function HeroSection() {
 
             <h1 className="max-w-2xl font-mono text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl">
               <span ref={headlineRef} />
-              <span ref={cursorRef} className="inline-block w-0.5 bg-primary text-primary">
+              <span
+                ref={cursorRef}
+                className="inline-block w-0.5 bg-primary text-primary"
+              >
                 |
               </span>
             </h1>
@@ -135,8 +141,9 @@ export function HeroSection() {
             transition={{ duration: 0.6, delay: 0.45 }}
             className="max-w-md font-mono text-sm leading-relaxed text-muted-foreground"
           >
-            Paste any URL. Our AI scrapes the page, extracts high-value keywords,
-            and generates ready-to-use blog content recommendations — in seconds.
+            Paste any URL. Our AI scrapes the page, extracts high-value
+            keywords, and generates ready-to-use blog content recommendations —
+            in seconds.
           </motion.p>
 
           <motion.div
@@ -152,7 +159,7 @@ export function HeroSection() {
                 href="/analyze"
                 className={cn(
                   "flex items-center gap-2 border border-primary bg-primary px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:scale-95",
-                  !model && "pointer-events-none opacity-50"
+                  !model && "pointer-events-none opacity-50",
                 )}
               >
                 Start Analyzing
@@ -163,7 +170,7 @@ export function HeroSection() {
                 href="/relevance"
                 className={cn(
                   "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                  !model && "pointer-events-none opacity-50"
+                  !model && "pointer-events-none opacity-50",
                 )}
               >
                 Check Draft Relevance
@@ -174,7 +181,7 @@ export function HeroSection() {
                 href="/battle"
                 className={cn(
                   "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                  !model && "pointer-events-none opacity-50"
+                  !model && "pointer-events-none opacity-50",
                 )}
               >
                 Battle Of Blogs
@@ -206,8 +213,12 @@ export function HeroSection() {
               <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-primary">
                 {f.tag}
               </span>
-              <h3 className="font-mono text-sm font-semibold text-foreground">{f.title}</h3>
-              <p className="font-mono text-xs leading-relaxed text-muted-foreground">{f.desc}</p>
+              <h3 className="font-mono text-sm font-semibold text-foreground">
+                {f.title}
+              </h3>
+              <p className="font-mono text-xs leading-relaxed text-muted-foreground">
+                {f.desc}
+              </p>
             </motion.div>
           ))}
         </motion.div>
@@ -220,7 +231,7 @@ const FEATURES = [
   {
     tag: "01 · Scrape",
     title: "Intelligent Page Parsing",
-    desc: "Extracts headings, meta tags, and body content from any public URL using Cheerio.",
+    desc: "Extracts headings, meta tags, and body content from any public URL.",
   },
   {
     tag: "02 · Extract",
