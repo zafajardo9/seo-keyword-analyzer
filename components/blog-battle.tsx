@@ -8,6 +8,7 @@ import { getStoredModel, ModelSelector } from "@/components/model-selector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
 
 interface BlogBattleProps {
   initialLeftUrl?: string;
@@ -92,7 +93,10 @@ export function BlogBattle({ initialLeftUrl = "" }: BlogBattleProps) {
             <span className="font-mono text-xs font-semibold">Battle of Blogs</span>
           </div>
         </div>
-        <ModelSelector onModelChange={setModel} />
+        <div className="flex items-center gap-4">
+          <ModelSelector onModelChange={setModel} />
+          <ToolNavDropdown />
+        </div>
       </nav>
 
       <main className="flex flex-1 flex-col items-center px-6 py-10">

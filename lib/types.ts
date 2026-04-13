@@ -97,6 +97,46 @@ export interface BlogBattleResult {
   metrics: BattleMetricScore[];
 }
 
+export type CompanyResearchStatus =
+  | "queued"
+  | "crawling"
+  | "enriched"
+  | "failed";
+
+export interface CompanyResearchContact {
+  type: "email" | "phone" | "social" | "contactPage";
+  value: string;
+  sourceUrl: string;
+}
+
+export interface CompanyResearchResult {
+  id: string;
+  status: CompanyResearchStatus;
+  website: string;
+  domain: string;
+  companyName: string;
+  category: string;
+  summary: string;
+  targetAudience: string;
+  partnershipFit: string;
+  emails: CompanyResearchContact[];
+  phones: CompanyResearchContact[];
+  contactPage: string;
+  socialLinks: CompanyResearchContact[];
+  confidenceScore: number;
+  notes: string[];
+  crawledPages: string[];
+  error?: string;
+}
+
+export interface CompanyResearchRun {
+  id: string;
+  createdAt: number;
+  updatedAt: number;
+  sourceUrls: string[];
+  results: CompanyResearchResult[];
+}
+
 export interface GeminiModel {
   id: string;
   displayName: string;

@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { TextPlugin } from "gsap/TextPlugin";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Notebook, Sparkle, Sword } from "@phosphor-icons/react";
+import { ArrowRight, Buildings, Notebook, Sparkle, Sword } from "@phosphor-icons/react";
 import { ModelSelector } from "@/components/model-selector";
 import { cn } from "@/lib/utils";
 
@@ -187,6 +187,17 @@ export function HeroSection() {
                 Battle Of Blogs
                 <Sword size={13} />
               </Link>
+
+              <Link
+                href="/company-research"
+                className={cn(
+                  "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
+                  !model && "pointer-events-none opacity-50",
+                )}
+              >
+                Company Research
+                <Buildings size={13} />
+              </Link>
             </div>
             {!model && (
               <span className="font-mono text-[10px] text-muted-foreground">
@@ -252,5 +263,10 @@ const FEATURES = [
     tag: "05 · Compare",
     title: "Battle of Blogs",
     desc: "Put two blog pages head-to-head and let AI judge who wins on SEO, clarity, and content depth.",
+  },
+  {
+    tag: "06 · Research",
+    title: "Company Research",
+    desc: "Crawl competitor and partner websites to collect public contacts, company summaries, and outreach fit.",
   },
 ];

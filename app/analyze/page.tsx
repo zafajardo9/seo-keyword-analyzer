@@ -21,6 +21,7 @@ import { RecommendationsPanel } from "@/components/recommendations-panel";
 import { PageAuditPanel } from "@/components/page-audit-panel";
 import { ModelSelector, getStoredModel } from "@/components/model-selector";
 import { PdfExport } from "@/components/pdf-export";
+import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
 import { PageAudit, ScrapedContent, Recommendation } from "@/lib/types";
 import {
   getCachedAnalysis,
@@ -225,6 +226,10 @@ export default function AnalyzePage() {
     step === 3 && scrapedContent?.url
       ? `/battle?left=${encodeURIComponent(scrapedContent.url)}`
       : "/battle";
+  const companyResearchHref =
+    step === 3 && scrapedContent?.url
+      ? `/company-research?url=${encodeURIComponent(scrapedContent.url)}`
+      : "/company-research";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -247,20 +252,11 @@ export default function AnalyzePage() {
         </div>
         <div className="flex items-center gap-4">
           <ModelSelector onModelChange={setModel} />
-          <Link
-            href={relevanceHref}
-            className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Notebook size={12} />
-            Relevance Checker
-          </Link>
-          <Link
-            href={battleHref}
-            className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Sword size={12} />
-            Battle of Blogs
-          </Link>
+          <ToolNavDropdown
+            relevanceHref={relevanceHref}
+            battleHref={battleHref}
+            companyResearchHref={companyResearchHref}
+          />
           {step === 3 && (
             <button
               onClick={handleReset}
@@ -452,6 +448,13 @@ export default function AnalyzePage() {
                         >
                           <Notebook size={13} />
                           Open In Relevance
+                        </Link>
+                        <Link
+                          href={companyResearchHref}
+                          className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+                        >
+                          <Globe size={13} />
+                          Open Research
                         </Link>
                         <PdfExport
                           scrapedContent={scrapedContent}

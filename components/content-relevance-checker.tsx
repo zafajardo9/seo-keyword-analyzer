@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
 
 interface ContentRelevanceCheckerProps {
   initialUrl?: string;
@@ -102,7 +103,10 @@ export function ContentRelevanceChecker({ initialUrl = "" }: ContentRelevanceChe
             <span className="font-mono text-xs font-semibold">Content Relevance Checker</span>
           </div>
         </div>
-        <ModelSelector onModelChange={setModel} />
+        <div className="flex items-center gap-4">
+          <ModelSelector onModelChange={setModel} />
+          <ToolNavDropdown />
+        </div>
       </nav>
 
       <main className="flex flex-1 flex-col items-center px-6 py-10">
