@@ -24,6 +24,10 @@ import {
   X,
 } from "@phosphor-icons/react";
 import {
+  CompanyAgeMix,
+  CompanyDiscoveryResult,
+  CompanyDiscoveryRun,
+  CompanyResearchMode,
   CompanyResearchResult,
   CompanyResearchRun,
   CompanyResearchStatus,
@@ -33,6 +37,13 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
 
@@ -45,7 +56,10 @@ type SortKey =
   | "companyName"
   | "domain"
   | "category"
-  | "confidenceScore";
+  | "confidenceScore"
+  | "relevanceScore";
+
+type ResearchPhase = "idle" | "discovering" | "ranking" | "crawling";
 
 interface CompanyResearchProps {
   initialUrl?: string;
@@ -66,16 +80,33 @@ const STATUS_LABELS: Record<CompanyResearchStatus, string> = {
 };
 
 export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
+  const [mode, setMode] = React.useState<CompanyResearchMode>(
+    initialUrl ? "urls" : "discovery",
+  );
   const [model, setModel] = React.useState("");
   const [input, setInput] = React.useState(initialUrl);
+  const [market, setMarket] = React.useState("");
+  const [location, setLocation] = React.useState("");
+  const [industry, setIndustry] = React.useState("");
+  const [ageMix, setAgeMix] = React.useState<CompanyAgeMix>("both");
+  const [contactPreference, setContactPreference] = React.useState(
+    "Public business contacts",
+  );
+  const [limit, setLimit] = React.useState("25");
   const [results, setResults] = React.useState<CompanyResearchResult[]>([]);
   const [history, setHistory] = React.useState<CompanyResearchRun[]>([]);
   const [activeRunId, setActiveRunId] = React.useState("");
+  const [activeRunMode, setActiveRunMode] =
+    React.useState<CompanyResearchMode>("urls");
+  const [activeDiscoveryQuery, setActiveDiscoveryQuery] =
+    React.useState<CompanyDiscoveryRun | undefined>();
   const [search, setSearch] = React.useState("");
   const [sortKey, setSortKey] = React.useState<SortKey>("companyName");
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
   const [running, setRunning] = React.useState(false);
   const [paused, setPaused] = React.useState(false);
+  const [phase, setPhase] = React.useState<ResearchPhase>("idle");
+  const [runNote, setRunNote] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState<string | null>(null);
   const cancelRef = React.useRef(false);
@@ -94,19 +125,30 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
   }, []);
 
   React.useEffect(() => {
-    if (initialUrl.trim()) setInput(initialUrl.trim());
+    if (initialUrl.trim()) {
+      setInput(initialUrl.trim());
+      setMode("urls");
+    }
   }, [initialUrl]);
 
   React.useEffect(() => {
     if (activeRunId && results.length > 0) {
-      persistRun(activeRunId, results.map((result) => result.website), results);
+      persistRun(
+        activeRunId,
+        results.map((result) => result.website),
+        results,
+        activeRunMode,
+        activeDiscoveryQuery,
+      );
     }
-  }, [results, activeRunId]);
+  }, [results, activeRunId, activeRunMode, activeDiscoveryQuery]);
 
   function persistRun(
     runId: string,
     sourceUrls: string[],
     nextResults: CompanyResearchResult[],
+    runMode: CompanyResearchMode,
+    discoveryQuery?: CompanyDiscoveryRun,
   ) {
     setHistory((current) => {
       const now = Date.now();
@@ -115,7 +157,9 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
         id: runId,
         createdAt: existing?.createdAt ?? now,
         updatedAt: now,
+        mode: runMode,
         sourceUrls,
+        discoveryQuery,
         results: nextResults,
       };
       const nextHistory = [
@@ -135,7 +179,10 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
     return Array.from(new Set(urls));
   }
 
-  function createPendingResult(url: string): CompanyResearchResult {
+  function createPendingResult(
+    url: string,
+    discovery?: CompanyDiscoveryResult,
+  ): CompanyResearchResult {
     let domain = url;
     try {
       const parsed = new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`);
@@ -161,6 +208,7 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
       confidenceScore: 0,
       notes: [],
       crawledPages: [],
+      discovery,
     };
   }
 
@@ -191,7 +239,11 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
       const res = await fetch("/api/research/company", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: result.website, model: selectedModel }),
+        body: JSON.stringify({
+          url: result.website,
+          model: selectedModel,
+          discovery: result.discovery,
+        }),
       });
       const data = await res.json();
 
@@ -230,6 +282,7 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
     setRunning(false);
     setPaused(false);
     pausedRef.current = false;
+    setPhase("idle");
   }
 
   function handleStart() {
@@ -246,15 +299,100 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
       return;
     }
 
-    const pending = urls.map(createPendingResult);
+    const pending = urls.map((url) => createPendingResult(url));
     const runId = `company-run-${Date.now()}`;
     cancelRef.current = false;
     pausedRef.current = false;
     setActiveRunId(runId);
+    setActiveRunMode("urls");
+    setActiveDiscoveryQuery(undefined);
     setResults(pending);
     setRunning(true);
     setPaused(false);
+    setPhase("crawling");
+    setRunNote(null);
     void runQueue(pending, selectedModel);
+  }
+
+  async function handleDiscover() {
+    setError(null);
+    setRunNote(null);
+
+    const selectedModel = model || getStoredModel();
+    if (!selectedModel) {
+      setError("No AI model selected. Please select one first.");
+      return;
+    }
+    if (!market.trim()) {
+      setError("Enter a market to discover companies.");
+      return;
+    }
+    if (!location.trim()) {
+      setError("Enter a location to focus the discovery.");
+      return;
+    }
+
+    const discoveryQuery: CompanyDiscoveryRun = {
+      market: market.trim(),
+      location: location.trim(),
+      industry: industry.trim() || undefined,
+      ageMix,
+      contactPreference: contactPreference.trim() || undefined,
+      limit: Number(limit),
+    };
+
+    const runId = `company-discovery-${Date.now()}`;
+    cancelRef.current = false;
+    pausedRef.current = false;
+    setActiveRunId(runId);
+    setActiveRunMode("discovery");
+    setActiveDiscoveryQuery(discoveryQuery);
+    setResults([]);
+    setRunning(true);
+    setPaused(false);
+    setPhase("discovering");
+
+    try {
+      const res = await fetch("/api/research/discover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...discoveryQuery, model: selectedModel }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error ?? "Failed to discover companies.");
+      }
+
+      const companies = Array.isArray(data.companies)
+        ? (data.companies as CompanyDiscoveryResult[])
+        : [];
+
+      if (companies.length === 0) {
+        setRunNote("No companies were discovered for this market and location.");
+        setRunning(false);
+        setPhase("idle");
+        return;
+      }
+
+      if (companies.length < discoveryQuery.limit) {
+        setRunNote(
+          `Found ${companies.length} companies, fewer than the requested ${discoveryQuery.limit}.`,
+        );
+      }
+
+      setPhase("ranking");
+      const pending = companies.map((company) =>
+        createPendingResult(company.website, company),
+      );
+      setResults(pending);
+      setPhase("crawling");
+      void runQueue(pending, selectedModel);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setRunning(false);
+      setPhase("idle");
+    }
   }
 
   function handlePauseToggle() {
@@ -268,6 +406,7 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
     pausedRef.current = false;
     setPaused(false);
     setRunning(false);
+    setPhase("idle");
     setResults((current) =>
       current.map((result) =>
         result.status === "queued" || result.status === "crawling"
@@ -289,6 +428,10 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
     setPaused(false);
     setResults([]);
     setActiveRunId("");
+    setActiveDiscoveryQuery(undefined);
+    setActiveRunMode("urls");
+    setPhase("idle");
+    setRunNote(null);
     setError(null);
   }
 
@@ -308,7 +451,22 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
     cancelRef.current = true;
     pausedRef.current = false;
     setActiveRunId(run.id);
+    setActiveRunMode(run.mode ?? "urls");
+    setActiveDiscoveryQuery(run.discoveryQuery);
     setInput(run.sourceUrls.join("\n"));
+    if (run.discoveryQuery) {
+      setMode("discovery");
+      setMarket(run.discoveryQuery.market);
+      setLocation(run.discoveryQuery.location);
+      setIndustry(run.discoveryQuery.industry ?? "");
+      setAgeMix(run.discoveryQuery.ageMix);
+      setContactPreference(
+        run.discoveryQuery.contactPreference ?? "Public business contacts",
+      );
+      setLimit(String(run.discoveryQuery.limit));
+    } else {
+      setMode("urls");
+    }
     setResults(run.results);
     setRunning(false);
     setPaused(false);
@@ -360,6 +518,8 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
             result.domain,
             result.category,
             result.summary,
+            result.discovery?.discoveryReason,
+            result.discovery?.ageSignal,
             ...result.emails.map((contact) => contact.value),
           ]
             .join(" ")
@@ -370,6 +530,14 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
 
     return [...searched].sort((a, b) => {
       const direction = sortDir === "asc" ? 1 : -1;
+      if (sortKey === "relevanceScore") {
+        return (
+          ((a.discovery?.relevanceScore ?? 0) -
+            (b.discovery?.relevanceScore ?? 0)) *
+          direction
+        );
+      }
+
       const aValue = a[sortKey];
       const bValue = b[sortKey];
       if (typeof aValue === "number" && typeof bValue === "number") {
@@ -393,6 +561,9 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
       "Summary",
       "Target Audience",
       "Partnership Fit",
+      "Discovery Reason",
+      "Age Signal",
+      "Relevance Score",
       "Emails",
       "Phones",
       "Contact Page",
@@ -408,6 +579,9 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
       result.summary,
       result.targetAudience,
       result.partnershipFit,
+      result.discovery?.discoveryReason ?? "",
+      result.discovery?.ageSignal ?? "",
+      result.discovery?.relevanceScore ?? "",
       result.emails.map((contact) => contact.value).join("; "),
       result.phones.map((contact) => contact.value).join("; "),
       result.contactPage,
@@ -519,6 +693,14 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
                 <Text style={styles.label}>Partnership fit: </Text>
                 {result.partnershipFit || "Review manually."}
               </Text>
+              {result.discovery ? (
+                <Text style={styles.text}>
+                  <Text style={styles.label}>Discovery: </Text>
+                  {result.discovery.ageSignal} · Relevance{" "}
+                  {result.discovery.relevanceScore}/100 ·{" "}
+                  {result.discovery.discoveryReason}
+                </Text>
+              ) : null}
               <Text style={styles.text}>
                 <Text style={styles.label}>Emails: </Text>
                 {result.emails.map((contact) => contact.value).join(", ") || "None"}
@@ -596,33 +778,187 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
                   </h1>
                 </div>
                 <p className="font-mono text-xs leading-relaxed text-muted-foreground">
-                  Paste company websites. The crawler checks public key pages,
-                  extracts contact details, and AI turns the crawl into a clean
-                  outreach table.
+                  Discover companies from a market or paste known websites. The
+                  crawler checks public key pages, extracts contact details, and
+                  AI turns the crawl into a clean outreach table.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="company-urls"
-                    className="font-mono text-xs uppercase tracking-widest text-muted-foreground"
-                  >
-                    Company Websites
-                  </Label>
-                  <Textarea
-                    id="company-urls"
-                    value={input}
-                    onChange={(event) => setInput(event.target.value)}
-                    placeholder={"https://example.com\nhttps://startup.com"}
-                    className="min-h-[220px] font-mono text-xs"
+                <div className="grid grid-cols-2 border border-border">
+                  <button
+                    type="button"
+                    onClick={() => setMode("discovery")}
+                    className={cn(
+                      "px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors",
+                      mode === "discovery"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
                     disabled={running}
-                  />
-                  <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
-                    One URL per line. V1 only collects public contact details
-                    visible on each website.
-                  </p>
+                  >
+                    Discover Companies
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("urls")}
+                    className={cn(
+                      "border-l border-border px-3 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors",
+                      mode === "urls"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                    disabled={running}
+                  >
+                    Paste URLs
+                  </button>
                 </div>
+
+                {mode === "discovery" ? (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="company-market"
+                        className="font-mono text-xs uppercase tracking-widest text-muted-foreground"
+                      >
+                        Market
+                      </Label>
+                      <Input
+                        id="company-market"
+                        value={market}
+                        onChange={(event) => setMarket(event.target.value)}
+                        placeholder="AI SEO tools"
+                        className="font-mono text-xs"
+                        disabled={running}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="company-location"
+                        className="font-mono text-xs uppercase tracking-widest text-muted-foreground"
+                      >
+                        Location
+                      </Label>
+                      <Input
+                        id="company-location"
+                        value={location}
+                        onChange={(event) => setLocation(event.target.value)}
+                        placeholder="United States"
+                        className="font-mono text-xs"
+                        disabled={running}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="company-industry"
+                        className="font-mono text-xs uppercase tracking-widest text-muted-foreground"
+                      >
+                        Industry / Niche
+                      </Label>
+                      <Input
+                        id="company-industry"
+                        value={industry}
+                        onChange={(event) => setIndustry(event.target.value)}
+                        placeholder="B2B SaaS"
+                        className="font-mono text-xs"
+                        disabled={running}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                          Company Age
+                        </Label>
+                        <Select
+                          value={ageMix}
+                          onValueChange={(value) =>
+                            setAgeMix(value as CompanyAgeMix)
+                          }
+                          disabled={running}
+                        >
+                          <SelectTrigger className="w-full font-mono text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="both">Both</SelectItem>
+                            <SelectItem value="emerging">Emerging</SelectItem>
+                            <SelectItem value="established">
+                              Established
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                          Limit
+                        </Label>
+                        <Select
+                          value={limit}
+                          onValueChange={setLimit}
+                          disabled={running}
+                        >
+                          <SelectTrigger className="w-full font-mono text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="25">25</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="contact-preference"
+                        className="font-mono text-xs uppercase tracking-widest text-muted-foreground"
+                      >
+                        Contact Preference
+                      </Label>
+                      <Input
+                        id="contact-preference"
+                        value={contactPreference}
+                        onChange={(event) =>
+                          setContactPreference(event.target.value)
+                        }
+                        placeholder="Public business contacts"
+                        className="font-mono text-xs"
+                        disabled={running}
+                      />
+                      <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+                        Requires `FIRECRAWL_API_KEY`. Discovery uses
+                        Firecrawl search results, then crawls public company
+                        pages.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="company-urls"
+                      className="font-mono text-xs uppercase tracking-widest text-muted-foreground"
+                    >
+                      Company Websites
+                    </Label>
+                    <Textarea
+                      id="company-urls"
+                      value={input}
+                      onChange={(event) => setInput(event.target.value)}
+                      placeholder={"https://example.com\nhttps://startup.com"}
+                      className="min-h-[220px] font-mono text-xs"
+                      disabled={running}
+                    />
+                    <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+                      One URL per line. V1 only collects public contact details
+                      visible on each website.
+                    </p>
+                  </div>
+                )}
 
                 {error ? (
                   <div className="border border-destructive/40 bg-destructive/5 p-3">
@@ -630,9 +966,15 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
                   </div>
                 ) : null}
 
+                {runNote ? (
+                  <div className="border border-primary/30 bg-primary/5 p-3">
+                    <p className="font-mono text-xs text-primary">{runNote}</p>
+                  </div>
+                ) : null}
+
                 <div className="grid grid-cols-2 gap-2">
                   <Button
-                    onClick={handleStart}
+                    onClick={mode === "discovery" ? handleDiscover : handleStart}
                     disabled={running}
                     className="font-mono text-xs uppercase tracking-widest"
                   >
@@ -641,7 +983,7 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
                     ) : (
                       <Play size={13} />
                     )}
-                    Start
+                    {mode === "discovery" ? "Discover" : "Start"}
                   </Button>
                   <Button
                     type="button"
@@ -684,6 +1026,11 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
                 </h2>
               </div>
               <div className="grid grid-cols-2 gap-3">
+                <StatCard
+                  label="Discovering"
+                  value={phase === "discovering" ? 1 : 0}
+                />
+                <StatCard label="Ranking" value={phase === "ranking" ? 1 : 0} />
                 <StatCard label="Queued" value={stats.queued} />
                 <StatCard label="Crawling" value={stats.crawling} />
                 <StatCard label="Complete" value={stats.enriched} />
@@ -717,9 +1064,12 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
                         className="min-w-0 text-left"
                       >
                         <p className="truncate font-mono text-xs font-semibold">
-                          {run.results.length} companies
+                          {run.mode === "discovery"
+                            ? run.discoveryQuery?.market || "Discovery"
+                            : `${run.results.length} companies`}
                         </p>
                         <p className="font-mono text-[10px] text-muted-foreground">
+                          {run.results.length} companies ·{" "}
                           {new Date(run.updatedAt).toLocaleString()}
                         </p>
                       </button>
@@ -748,7 +1098,7 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
                 <Input
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Search company, domain, email, or category..."
+                  placeholder="Search company, domain, email, category, or discovery reason..."
                   className="pl-8 font-mono text-xs"
                 />
               </div>
@@ -895,7 +1245,7 @@ function ResultsTable({
 
   return (
     <div className="overflow-x-auto border border-border">
-      <table className="w-full min-w-[1200px] border-collapse">
+      <table className="w-full min-w-[1500px] border-collapse">
         <thead className="border-b border-border bg-muted/25">
           <tr>
             <th className="p-3 text-left">
@@ -943,6 +1293,20 @@ function ResultsTable({
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 Partnership Fit
               </span>
+            </th>
+            <th className="p-3 text-left">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                Discovery Reason
+              </span>
+            </th>
+            <th className="p-3 text-left">
+              <SortButton
+                label="Relevance"
+                sortKey="relevanceScore"
+                activeKey={sortKey}
+                sortDir={sortDir}
+                onSort={onSort}
+              />
             </th>
             <th className="p-3 text-left">
               <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -1025,6 +1389,50 @@ function ResultsTable({
               </td>
               <td className="max-w-[260px] p-3 font-mono text-xs leading-relaxed">
                 {result.partnershipFit || "-"}
+              </td>
+              <td className="max-w-[260px] p-3">
+                {result.discovery ? (
+                  <div className="space-y-2">
+                    <span className="inline-flex border border-border px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                      {result.discovery.ageSignal}
+                    </span>
+                    <p className="font-mono text-xs leading-relaxed text-muted-foreground">
+                      {result.discovery.discoveryReason}
+                    </p>
+                    <a
+                      href={result.discovery.evidenceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block font-mono text-[10px] text-primary hover:underline"
+                    >
+                      Search evidence
+                    </a>
+                  </div>
+                ) : (
+                  <span className="font-mono text-xs text-muted-foreground">
+                    Manual URL
+                  </span>
+                )}
+              </td>
+              <td className="p-3">
+                <div className="w-24">
+                  <div className="flex items-end gap-1">
+                    <span className="font-mono text-lg font-semibold">
+                      {result.discovery?.relevanceScore ?? 0}
+                    </span>
+                    <span className="pb-0.5 font-mono text-[10px] text-muted-foreground">
+                      /100
+                    </span>
+                  </div>
+                  <div className="mt-1 h-1.5 bg-muted">
+                    <div
+                      className="h-full bg-primary"
+                      style={{
+                        width: `${result.discovery?.relevanceScore ?? 0}%`,
+                      }}
+                    />
+                  </div>
+                </div>
               </td>
               <td className="max-w-[220px] p-3">
                 <ContactList

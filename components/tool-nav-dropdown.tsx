@@ -5,6 +5,7 @@ import {
   Buildings,
   CaretDown,
   ChartLineUp,
+  Lightning,
   Notebook,
   Sword,
 } from "@phosphor-icons/react";
@@ -20,6 +21,7 @@ interface ToolNavDropdownProps {
   relevanceHref?: string;
   battleHref?: string;
   companyResearchHref?: string;
+  indexNowHref?: string;
 }
 
 const TOOL_LINKS = [
@@ -47,6 +49,12 @@ const TOOL_LINKS = [
     description: "Crawl public contacts and fit",
     icon: Buildings,
   },
+  {
+    key: "indexNow",
+    label: "IndexNow Submit",
+    description: "Push URLs to search engines",
+    icon: Lightning,
+  },
 ] as const;
 
 export function ToolNavDropdown({
@@ -54,12 +62,14 @@ export function ToolNavDropdown({
   relevanceHref = "/relevance",
   battleHref = "/battle",
   companyResearchHref = "/company-research",
+  indexNowHref = "/indexnow",
 }: ToolNavDropdownProps) {
   const hrefs = {
     analyze: analyzeHref,
     relevance: relevanceHref,
     battle: battleHref,
     companyResearch: companyResearchHref,
+    indexNow: indexNowHref,
   };
 
   return (
@@ -100,4 +110,3 @@ export function ToolNavDropdown({
     </Popover>
   );
 }
-

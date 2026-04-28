@@ -6,7 +6,14 @@ import gsap from "gsap";
 import { TextPlugin } from "gsap/TextPlugin";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Buildings, Notebook, Sparkle, Sword } from "@phosphor-icons/react";
+import {
+  ArrowRight,
+  Buildings,
+  Lightning,
+  Notebook,
+  Sparkle,
+  Sword,
+} from "@phosphor-icons/react";
 import { ModelSelector } from "@/components/model-selector";
 import { cn } from "@/lib/utils";
 
@@ -197,6 +204,14 @@ export function HeroSection() {
               >
                 Company Research
                 <Buildings size={13} />
+              </Link>
+
+              <Link
+                href="/indexnow"
+                className="flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+              >
+                IndexNow Submit
+                <Lightning size={13} />
               </Link>
             </div>
             {!model && (

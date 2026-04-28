@@ -103,10 +103,28 @@ export type CompanyResearchStatus =
   | "enriched"
   | "failed";
 
+export type CompanyAgeMix = "both" | "emerging" | "established";
+export type CompanyAgeSignal = "emerging" | "established" | "unknown";
+export type CompanyResearchMode = "urls" | "discovery";
+
 export interface CompanyResearchContact {
   type: "email" | "phone" | "social" | "contactPage";
   value: string;
   sourceUrl: string;
+}
+
+export interface CompanyDiscoveryResult {
+  companyName: string;
+  website: string;
+  domain: string;
+  market: string;
+  location: string;
+  ageSignal: CompanyAgeSignal;
+  discoveryReason: string;
+  evidenceTitle: string;
+  evidenceUrl: string;
+  evidenceSnippet: string;
+  relevanceScore: number;
 }
 
 export interface CompanyResearchResult {
@@ -126,6 +144,7 @@ export interface CompanyResearchResult {
   confidenceScore: number;
   notes: string[];
   crawledPages: string[];
+  discovery?: CompanyDiscoveryResult;
   error?: string;
 }
 
@@ -133,8 +152,19 @@ export interface CompanyResearchRun {
   id: string;
   createdAt: number;
   updatedAt: number;
+  mode?: CompanyResearchMode;
   sourceUrls: string[];
+  discoveryQuery?: CompanyDiscoveryRun;
   results: CompanyResearchResult[];
+}
+
+export interface CompanyDiscoveryRun {
+  market: string;
+  location: string;
+  industry?: string;
+  ageMix: CompanyAgeMix;
+  contactPreference?: string;
+  limit: number;
 }
 
 export interface GeminiModel {

@@ -2,7 +2,7 @@ import { researchCompanyWebsite } from "@/lib/company-research";
 
 export async function POST(request: Request) {
   try {
-    const { url, model } = await request.json();
+    const { url, model, discovery } = await request.json();
 
     if (!url || typeof url !== "string" || !model || typeof model !== "string") {
       return Response.json(
@@ -12,6 +12,7 @@ export async function POST(request: Request) {
     }
 
     const company = await researchCompanyWebsite(url, model);
+    if (discovery) company.discovery = discovery;
     return Response.json({ company });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -24,4 +25,3 @@ export async function POST(request: Request) {
     return Response.json({ error: message }, { status });
   }
 }
-
