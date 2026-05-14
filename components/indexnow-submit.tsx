@@ -23,6 +23,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { HistoryPanel, SaveToHistoryButton } from "@/components/history-panel";
+
+interface IndexNowSnapshot {
+  host: string;
+  apiKey: string;
+  keyLocation: string;
+  engine: string;
+  urlsText: string;
+  result: SubmitResult | null;
+}
 
 const ENGINES = [
   { value: "indexnow", label: "api.indexnow.org (all engines)" },
@@ -43,8 +53,6 @@ interface SubmitResult {
   error?: string;
   details?: string;
 }
-
-const STORAGE_KEY = "indexnow:lastSubmit";
 
 function generateKey(): string {
   // 32 lowercase hex chars
@@ -82,25 +90,34 @@ export function IndexNowSubmit() {
   const [result, setResult] = React.useState<SubmitResult | null>(null);
   const [error, setError] = React.useState<string>("");
   const [copied, setCopied] = React.useState(false);
+  const [historyRefresh, setHistoryRefresh] = React.useState(0);
 
-  // Restore previous submission state
+  // Restore previous submission state from DB
   React.useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const saved = JSON.parse(raw) as {
-        host?: string;
-        apiKey?: string;
-        keyLocation?: string;
-        engine?: string;
-      };
-      if (saved.host) setHost(saved.host);
-      if (saved.apiKey) setApiKey(saved.apiKey);
-      if (saved.keyLocation) setKeyLocation(saved.keyLocation);
-      if (saved.engine) setEngine(saved.engine);
-    } catch {
-      // ignore
-    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/preferences", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const saved = (data?.indexnow ?? null) as null | {
+          host?: string;
+          apiKey?: string;
+          keyLocation?: string;
+          engine?: string;
+        };
+        if (!saved || cancelled) return;
+        if (saved.host) setHost(saved.host);
+        if (saved.apiKey) setApiKey(saved.apiKey);
+        if (saved.keyLocation) setKeyLocation(saved.keyLocation);
+        if (saved.engine) setEngine(saved.engine);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const urlList = React.useMemo(
@@ -174,15 +191,18 @@ export function IndexNowSubmit() {
 
       // Persist non-secret-ish identifiers for convenience
       try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({
-            host: host.trim(),
-            apiKey: apiKey.trim(),
-            keyLocation: keyLocation.trim(),
-            engine,
+        await fetch("/api/preferences", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            indexnow: {
+              host: host.trim(),
+              apiKey: apiKey.trim(),
+              keyLocation: keyLocation.trim(),
+              engine,
+            },
           }),
-        );
+        });
       } catch {
         // ignore
       }
@@ -220,6 +240,38 @@ export function IndexNowSubmit() {
       transition={{ duration: 0.4 }}
       className="w-full max-w-3xl"
     >
+      <div className="mb-4 flex items-center justify-between">
+        <HistoryPanel<IndexNowSnapshot>
+          tool="indexnow"
+          refreshToken={historyRefresh}
+          onRestore={(payload) => {
+            setHost(payload.host ?? "");
+            setApiKey(payload.apiKey ?? "");
+            setKeyLocation(payload.keyLocation ?? "");
+            setEngine(payload.engine ?? "indexnow");
+            setUrlsText(payload.urlsText ?? "");
+            setResult(payload.result ?? null);
+            setError("");
+          }}
+        />
+        {result && (
+          <SaveToHistoryButton<IndexNowSnapshot>
+            tool="indexnow"
+            buildPayload={() => ({
+              label: `${host.trim()} \u2014 ${urlList.length} URL${urlList.length === 1 ? "" : "s"} [${result.status}]`,
+              payload: {
+                host: host.trim(),
+                apiKey: apiKey.trim(),
+                keyLocation: keyLocation.trim(),
+                engine,
+                urlsText,
+                result,
+              },
+            })}
+            onSaved={() => setHistoryRefresh((n) => n + 1)}
+          />
+        )}
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         {/* Host */}
         <div className="flex flex-col gap-2">

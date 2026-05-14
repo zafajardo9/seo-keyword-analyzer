@@ -9,8 +9,8 @@ export interface Recommendation {
 
 export async function POST(request: Request) {
   try {
-    const key = getGeminiApiKey();
-    const { scrapedContent, keywords, model } = await request.json();
+    const { scrapedContent, keywords, model, apiKey } = await request.json();
+    const key = await getGeminiApiKey(apiKey);
 
     if (!scrapedContent || !model) {
       return Response.json({ error: "scrapedContent and model are required" }, { status: 400 });

@@ -10,11 +10,13 @@ import {
   ArrowRight,
   Buildings,
   Lightning,
+  MagnifyingGlass,
   Notebook,
   Sparkle,
   Sword,
 } from "@phosphor-icons/react";
 import { ModelSelector } from "@/components/model-selector";
+import { ApiKeyManager, hasAnyKey } from "@/components/api-key-manager";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(TextPlugin);
@@ -32,6 +34,11 @@ export function HeroSection() {
   const cursorRef = React.useRef<HTMLSpanElement>(null);
   const bgRef = React.useRef<HTMLDivElement>(null);
   const [model, setModel] = React.useState("");
+  const [hasKey, setHasKey] = React.useState(false);
+
+  React.useEffect(() => {
+    setHasKey(hasAnyKey());
+  }, []);
 
   useGSAP(
     () => {
@@ -110,6 +117,7 @@ export function HeroSection() {
           >
             Launch App →
           </Link>
+          <ApiKeyManager onChange={() => setHasKey(hasAnyKey())} />
         </motion.div>
       </nav>
 
@@ -166,7 +174,7 @@ export function HeroSection() {
                 href="/analyze"
                 className={cn(
                   "flex items-center gap-2 border border-primary bg-primary px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:scale-95",
-                  !model && "pointer-events-none opacity-50",
+                  !model && !hasKey && "pointer-events-none opacity-50",
                 )}
               >
                 Start Analyzing
@@ -177,7 +185,7 @@ export function HeroSection() {
                 href="/relevance"
                 className={cn(
                   "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                  !model && "pointer-events-none opacity-50",
+                  !model && !hasKey && "pointer-events-none opacity-50",
                 )}
               >
                 Check Draft Relevance
@@ -188,7 +196,7 @@ export function HeroSection() {
                 href="/battle"
                 className={cn(
                   "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                  !model && "pointer-events-none opacity-50",
+                  !model && !hasKey && "pointer-events-none opacity-50",
                 )}
               >
                 Battle Of Blogs
@@ -199,11 +207,22 @@ export function HeroSection() {
                 href="/company-research"
                 className={cn(
                   "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                  !model && "pointer-events-none opacity-50",
+                  !model && !hasKey && "pointer-events-none opacity-50",
                 )}
               >
                 Company Research
                 <Buildings size={13} />
+              </Link>
+
+              <Link
+                href="/market-research"
+                className={cn(
+                  "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
+                  !model && !hasKey && "pointer-events-none opacity-50",
+                )}
+              >
+                Market Research
+                <MagnifyingGlass size={13} />
               </Link>
 
               <Link
@@ -214,9 +233,9 @@ export function HeroSection() {
                 <Lightning size={13} />
               </Link>
             </div>
-            {!model && (
+            {!model && !hasKey && (
               <span className="font-mono text-[10px] text-muted-foreground">
-                Select a model above to continue
+                Select a model or provide an API key to continue
               </span>
             )}
           </motion.div>

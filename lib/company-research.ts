@@ -280,8 +280,9 @@ async function enrichCompany(
   emails: CompanyResearchContact[],
   phones: CompanyResearchContact[],
   contactPage: string,
+  apiKey?: string,
 ): Promise<RawCompanyAiResult> {
-  const key = getGeminiApiKey();
+  const key = await getGeminiApiKey(apiKey);
   const pageSummary = pages
     .map(
       (page, index) => `Page ${index + 1}
@@ -332,6 +333,7 @@ Guidance:
 export async function researchCompanyWebsite(
   inputUrl: string,
   model: string,
+  apiKey?: string,
 ): Promise<CompanyResearchResult> {
   const root = normalizeWebsite(inputUrl);
   const normalizedRoot = `${root.protocol}//${root.hostname}${root.pathname === "/" ? "" : root.pathname}`;
@@ -382,6 +384,7 @@ export async function researchCompanyWebsite(
     emails,
     phones,
     contactPage,
+    apiKey,
   );
 
   const baseNotes = notesForContacts(emails, phones, contactPage);

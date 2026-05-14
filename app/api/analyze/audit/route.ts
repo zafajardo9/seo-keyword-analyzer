@@ -175,8 +175,8 @@ function normalizeAudit(raw: RawAuditResponse | null): PageAudit | null {
 
 export async function POST(request: Request) {
   try {
-    const key = getGeminiApiKey();
-    const { scrapedContent, model } = await request.json();
+    const { scrapedContent, model, apiKey } = await request.json();
+    const key = await getGeminiApiKey(apiKey);
 
     if (!scrapedContent || !model) {
       return Response.json(

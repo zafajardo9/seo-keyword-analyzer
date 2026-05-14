@@ -22,6 +22,7 @@ import { PageAuditPanel } from "@/components/page-audit-panel";
 import { ModelSelector, getStoredModel } from "@/components/model-selector";
 import { PdfExport } from "@/components/pdf-export";
 import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
+import { ApiKeyManager, getStoredGeminiKey } from "@/components/api-key-manager";
 import { PageAudit, ScrapedContent, Recommendation } from "@/lib/types";
 import {
   getCachedAnalysis,
@@ -69,7 +70,7 @@ export default function AnalyzePage() {
     setCacheEntry(null);
 
     // --- cache hit ---
-    const cached = getCachedAnalysis(url);
+    const cached = await getCachedAnalysis(url);
     if (cached) {
       setCacheEntry(cached);
       setScrapedContent(cached.scrapedContent);
@@ -123,6 +124,7 @@ export default function AnalyzePage() {
           body: JSON.stringify({
             scrapedContent: content,
             model: currentModel,
+            apiKey: getStoredGeminiKey(),
           }),
         }),
         fetch("/api/analyze/keywords", {
@@ -131,6 +133,7 @@ export default function AnalyzePage() {
           body: JSON.stringify({
             scrapedContent: content,
             model: currentModel,
+            apiKey: getStoredGeminiKey(),
           }),
         }),
         fetch("/api/analyze/recommendations", {
@@ -139,6 +142,7 @@ export default function AnalyzePage() {
           body: JSON.stringify({
             scrapedContent: content,
             model: currentModel,
+            apiKey: getStoredGeminiKey(),
           }),
         }),
       ]);
@@ -179,7 +183,7 @@ export default function AnalyzePage() {
 
       // --- save to cache ---
       if (finalAudit || finalKeywords.length > 0 || finalRecs.length > 0) {
-        setCachedAnalysis({
+        await setCachedAnalysis({
           url,
           scrapedContent: content,
           pageAudit: finalAudit,
@@ -199,8 +203,8 @@ export default function AnalyzePage() {
     }
   }
 
-  function handleReanalyze() {
-    if (currentUrl) clearCachedAnalysis(currentUrl);
+  async function handleReanalyze() {
+    if (currentUrl) await clearCachedAnalysis(currentUrl);
     setCacheEntry(null);
     handleReset();
   }
@@ -251,6 +255,7 @@ export default function AnalyzePage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <ApiKeyManager />
           <ModelSelector onModelChange={setModel} />
           <ToolNavDropdown
             relevanceHref={relevanceHref}

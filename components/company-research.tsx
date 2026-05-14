@@ -33,6 +33,11 @@ import {
   CompanyResearchStatus,
 } from "@/lib/types";
 import { getStoredModel, ModelSelector } from "@/components/model-selector";
+import {
+  ApiKeyManager,
+  getStoredGeminiKey,
+  getStoredFirecrawlKey,
+} from "@/components/api-key-manager";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -47,7 +52,6 @@ import {
 import { cn } from "@/lib/utils";
 import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
 
-const HISTORY_KEY = "company_research_runs";
 const MAX_HISTORY = 8;
 const CONCURRENCY = 2;
 
@@ -116,12 +120,18 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
     const stored = getStoredModel();
     if (stored) setModel(stored);
 
-    try {
-      const raw = localStorage.getItem(HISTORY_KEY);
-      if (raw) setHistory(JSON.parse(raw));
-    } catch {
-      setHistory([]);
-    }
+    (async () => {
+      try {
+        const res = await fetch("/api/research-history", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data?.runs)) {
+          setHistory(data.runs as CompanyResearchRun[]);
+        }
+      } catch {
+        setHistory([]);
+      }
+    })();
   }, []);
 
   React.useEffect(() => {
@@ -166,7 +176,12 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
         nextRun,
         ...current.filter((run) => run.id !== runId),
       ].slice(0, MAX_HISTORY);
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory));
+      // Persist to DB (fire-and-forget)
+      void fetch("/api/research-history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ run: nextRun }),
+      });
       return nextHistory;
     });
   }
@@ -243,6 +258,7 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
           url: result.website,
           model: selectedModel,
           discovery: result.discovery,
+          apiKey: getStoredGeminiKey(),
         }),
       });
       const data = await res.json();
@@ -356,7 +372,12 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
       const res = await fetch("/api/research/discover", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...discoveryQuery, model: selectedModel }),
+        body: JSON.stringify({
+          ...discoveryQuery,
+          model: selectedModel,
+          apiKey: getStoredGeminiKey(),
+          firecrawlApiKey: getStoredFirecrawlKey(),
+        }),
       });
       const data = await res.json();
 
@@ -476,7 +497,9 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
   function handleDeleteHistory(runId: string) {
     setHistory((current) => {
       const next = current.filter((run) => run.id !== runId);
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+      void fetch(`/api/research-history?id=${encodeURIComponent(runId)}`, {
+        method: "DELETE",
+      });
       return next;
     });
   }
@@ -761,6 +784,7 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <ApiKeyManager />
           <ModelSelector onModelChange={setModel} />
           <ToolNavDropdown />
         </div>

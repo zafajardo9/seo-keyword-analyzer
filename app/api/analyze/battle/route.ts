@@ -91,8 +91,8 @@ function normalizeBattle(
 
 export async function POST(request: Request) {
   try {
-    const key = getGeminiApiKey();
-    const { leftUrl, rightUrl, model } = await request.json();
+    const { leftUrl, rightUrl, model, apiKey } = await request.json();
+    const key = await getGeminiApiKey(apiKey);
 
     if (!leftUrl || !rightUrl || !model) {
       return Response.json({ error: "leftUrl, rightUrl, and model are required" }, { status: 400 });

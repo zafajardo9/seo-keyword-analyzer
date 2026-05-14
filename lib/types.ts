@@ -167,6 +167,19 @@ export interface CompanyDiscoveryRun {
   limit: number;
 }
 
+export interface MarketResearchReport {
+  companyName: string;
+  industry: string;
+  summary: string;
+  trends: string[];
+  competitorInsights: string[];
+  recentNews: string[];
+  opportunities: string[];
+  risks: string[];
+  confidenceScore: number;
+  sources: string[];
+}
+
 export interface GeminiModel {
   id: string;
   displayName: string;

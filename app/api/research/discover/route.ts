@@ -10,6 +10,8 @@ export async function POST(request: Request) {
       contactPreference,
       limit = 25,
       model,
+      apiKey,
+      firecrawlApiKey,
     } = await request.json();
 
     if (!market || typeof market !== "string") {
@@ -39,6 +41,8 @@ export async function POST(request: Request) {
       contactPreference,
       limit: Number(limit),
       model,
+      apiKey,
+      firecrawlApiKey,
     });
 
     return Response.json({ companies });

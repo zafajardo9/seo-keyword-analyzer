@@ -1,8 +1,5 @@
 import { PageAudit, ScrapedContent, Recommendation } from "@/lib/types";
 
-const CACHE_KEY_PREFIX = "seo_analysis_";
-const TTL_MS = 30 * 60 * 1000; // 30 minutes
-
 export interface CacheEntry {
   url: string;
   scrapedContent: ScrapedContent;
@@ -13,26 +10,17 @@ export interface CacheEntry {
   timestamp: number;
 }
 
-function normalizeUrl(url: string): string {
+export async function getCachedAnalysis(url: string): Promise<CacheEntry | null> {
   try {
-    const u = new URL(url.trim());
-    // remove trailing slash and hash for consistent cache keys
-    return (u.origin + u.pathname).replace(/\/$/, "") + u.search;
-  } catch {
-    return url.trim().toLowerCase();
-  }
-}
-
-function cacheKey(url: string): string {
-  return CACHE_KEY_PREFIX + normalizeUrl(url);
-}
-
-export function getCachedAnalysis(url: string): CacheEntry | null {
-  try {
-    const raw = localStorage.getItem(cacheKey(url));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<CacheEntry>;
-    const entry: CacheEntry = {
+    const res = await fetch(
+      `/api/cache?url=${encodeURIComponent(url)}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const parsed = data?.entry as Partial<CacheEntry> | null;
+    if (!parsed) return null;
+    return {
       url: parsed.url ?? url,
       scrapedContent: parsed.scrapedContent as ScrapedContent,
       pageAudit: parsed.pageAudit ?? null,
@@ -41,27 +29,28 @@ export function getCachedAnalysis(url: string): CacheEntry | null {
       model: parsed.model ?? "",
       timestamp: typeof parsed.timestamp === "number" ? parsed.timestamp : 0,
     };
-    if (Date.now() - entry.timestamp > TTL_MS) {
-      localStorage.removeItem(cacheKey(url));
-      return null;
-    }
-    return entry;
   } catch {
     return null;
   }
 }
 
-export function setCachedAnalysis(entry: CacheEntry): void {
+export async function setCachedAnalysis(entry: CacheEntry): Promise<void> {
   try {
-    localStorage.setItem(cacheKey(entry.url), JSON.stringify(entry));
+    await fetch("/api/cache", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ entry }),
+    });
   } catch {
-    // localStorage might be full — silently ignore
+    // ignore
   }
 }
 
-export function clearCachedAnalysis(url: string): void {
+export async function clearCachedAnalysis(url: string): Promise<void> {
   try {
-    localStorage.removeItem(cacheKey(url));
+    await fetch(`/api/cache?url=${encodeURIComponent(url)}`, {
+      method: "DELETE",
+    });
   } catch {
     // ignore
   }

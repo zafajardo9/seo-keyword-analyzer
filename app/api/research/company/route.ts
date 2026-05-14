@@ -2,7 +2,7 @@ import { researchCompanyWebsite } from "@/lib/company-research";
 
 export async function POST(request: Request) {
   try {
-    const { url, model, discovery } = await request.json();
+    const { url, model, discovery, apiKey } = await request.json();
 
     if (!url || typeof url !== "string" || !model || typeof model !== "string") {
       return Response.json(
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const company = await researchCompanyWebsite(url, model);
+    const company = await researchCompanyWebsite(url, model, apiKey);
     if (discovery) company.discovery = discovery;
     return Response.json({ company });
   } catch (err) {

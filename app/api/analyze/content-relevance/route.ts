@@ -41,8 +41,8 @@ function normalizeAudit(raw: RawContentRelevanceAudit | null, targetKeyword: str
 
 export async function POST(request: Request) {
   try {
-    const key = getGeminiApiKey();
-    const { keyword, draft, url, model } = await request.json();
+    const { keyword, draft, url, model, apiKey } = await request.json();
+    const key = await getGeminiApiKey(apiKey);
 
     if (!keyword || !model) {
       return Response.json({ error: "keyword and model are required" }, { status: 400 });

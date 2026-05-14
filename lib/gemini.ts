@@ -3,20 +3,64 @@ export interface GeminiGenerationConfig {
   maxOutputTokens?: number;
 }
 
-export function getGeminiApiKey(): string {
-  const key = process.env.GEMINI_API_KEY;
+import { sql, ensureSchema } from "@/lib/db";
 
-  if (!key) {
-    throw new Error("GEMINI_API_KEY is not configured");
+let cachedDbGeminiKey: string | null = null;
+let cachedDbFirecrawlKey: string | null = null;
+let dbKeysLoadedAt = 0;
+const DB_KEYS_TTL_MS = 30_000;
+
+async function loadDbKeys(): Promise<void> {
+  if (Date.now() - dbKeysLoadedAt < DB_KEYS_TTL_MS) return;
+  try {
+    await ensureSchema();
+    const rows = await sql`SELECT gemini_key, firecrawl_key FROM api_keys WHERE id = 1`;
+    const row = rows[0];
+    cachedDbGeminiKey = (row?.gemini_key as string) || null;
+    cachedDbFirecrawlKey = (row?.firecrawl_key as string) || null;
+    dbKeysLoadedAt = Date.now();
+  } catch {
+    // DB unreachable — leave previous cache values alone, fall back to env
+  }
+}
+
+export async function getGeminiApiKey(override?: string): Promise<string> {
+  const trimmed = override?.trim();
+  if (trimmed) return trimmed;
+
+  await loadDbKeys();
+  if (cachedDbGeminiKey && cachedDbGeminiKey.trim()) {
+    return cachedDbGeminiKey.trim();
   }
 
-  return key;
+  const envKey = process.env.GEMINI_API_KEY?.trim();
+  if (envKey) return envKey;
+
+  throw new Error("GEMINI_API_KEY is not configured");
+}
+
+export async function getFirecrawlApiKeyFromDbOrEnv(override?: string): Promise<string | null> {
+  const trimmed = override?.trim();
+  if (trimmed) return trimmed;
+
+  await loadDbKeys();
+  if (cachedDbFirecrawlKey && cachedDbFirecrawlKey.trim()) {
+    return cachedDbFirecrawlKey.trim();
+  }
+
+  const envKey = process.env.FIRECRAWL_API_KEY?.trim();
+  return envKey || null;
+}
+
+/** Force a refresh of the DB-cached keys (call after the user updates them). */
+export function invalidateDbKeyCache(): void {
+  dbKeysLoadedAt = 0;
 }
 
 export async function generateGeminiText(
   model: string,
   prompt: string,
-  key: string,
+  key: string | undefined,
   generationConfig: GeminiGenerationConfig
 ): Promise<string> {
   const modelId = model.replace("models/", "");

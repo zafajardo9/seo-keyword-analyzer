@@ -5,10 +5,18 @@ import Link from "next/link";
 import { ArrowLeft, CircleNotch, Crown, Fire, Sparkle, Sword, Trophy } from "@phosphor-icons/react";
 import { BlogBattleResult } from "@/lib/types";
 import { getStoredModel, ModelSelector } from "@/components/model-selector";
+import { ApiKeyManager, getStoredGeminiKey } from "@/components/api-key-manager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
+import { HistoryPanel, SaveToHistoryButton } from "@/components/history-panel";
+
+interface BattleSnapshot {
+  leftUrl: string;
+  rightUrl: string;
+  battle: BlogBattleResult | null;
+}
 
 interface BlogBattleProps {
   initialLeftUrl?: string;
@@ -21,6 +29,7 @@ export function BlogBattle({ initialLeftUrl = "" }: BlogBattleProps) {
   const [battle, setBattle] = React.useState<BlogBattleResult | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [historyRefresh, setHistoryRefresh] = React.useState(0);
 
   React.useEffect(() => {
     const stored = getStoredModel();
@@ -59,6 +68,7 @@ export function BlogBattle({ initialLeftUrl = "" }: BlogBattleProps) {
           leftUrl: leftUrl.trim(),
           rightUrl: rightUrl.trim(),
           model: currentModel,
+          apiKey: getStoredGeminiKey(),
         }),
       });
 
@@ -94,6 +104,17 @@ export function BlogBattle({ initialLeftUrl = "" }: BlogBattleProps) {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <HistoryPanel<BattleSnapshot>
+            tool="battle"
+            refreshToken={historyRefresh}
+            onRestore={(payload) => {
+              setLeftUrl(payload.leftUrl ?? "");
+              setRightUrl(payload.rightUrl ?? "");
+              setBattle(payload.battle ?? null);
+              setError(null);
+            }}
+          />
+          <ApiKeyManager />
           <ModelSelector onModelChange={setModel} />
           <ToolNavDropdown />
         </div>
@@ -162,7 +183,19 @@ export function BlogBattle({ initialLeftUrl = "" }: BlogBattleProps) {
               </form>
             </section>
 
-            <section className="border border-border p-5">
+            <section className="flex flex-col gap-3 border border-border p-5">
+              {battle && !loading && (
+                <div className="flex justify-end">
+                  <SaveToHistoryButton<BattleSnapshot>
+                    tool="battle"
+                    buildPayload={() => ({
+                      label: `${leftUrl.trim()} vs ${rightUrl.trim()}`,
+                      payload: { leftUrl: leftUrl.trim(), rightUrl: rightUrl.trim(), battle },
+                    })}
+                    onSaved={() => setHistoryRefresh((n) => n + 1)}
+                  />
+                </div>
+              )}
               {loading ? <BattleLoadingState /> : battle ? <BattleResults battle={battle} /> : <BattleEmptyState />}
             </section>
           </div>

@@ -1,8 +1,9 @@
 import { getGeminiApiKey } from "@/lib/gemini";
 
-export async function GET() {
+export async function POST(request: Request) {
   try {
-    const key = getGeminiApiKey();
+    const { apiKey } = await request.json();
+    const key = await getGeminiApiKey(apiKey);
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`,
       { headers: { "Content-Type": "application/json" } }

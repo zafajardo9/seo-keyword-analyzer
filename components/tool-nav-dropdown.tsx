@@ -6,6 +6,7 @@ import {
   CaretDown,
   ChartLineUp,
   Lightning,
+  MagnifyingGlass,
   Notebook,
   Sword,
 } from "@phosphor-icons/react";
@@ -21,6 +22,7 @@ interface ToolNavDropdownProps {
   relevanceHref?: string;
   battleHref?: string;
   companyResearchHref?: string;
+  marketResearchHref?: string;
   indexNowHref?: string;
 }
 
@@ -50,6 +52,12 @@ const TOOL_LINKS = [
     icon: Buildings,
   },
   {
+    key: "marketResearch",
+    label: "Market Research",
+    description: "Market trends, competitors, and news",
+    icon: MagnifyingGlass,
+  },
+  {
     key: "indexNow",
     label: "IndexNow Submit",
     description: "Push URLs to search engines",
@@ -62,6 +70,7 @@ export function ToolNavDropdown({
   relevanceHref = "/relevance",
   battleHref = "/battle",
   companyResearchHref = "/company-research",
+  marketResearchHref = "/market-research",
   indexNowHref = "/indexnow",
 }: ToolNavDropdownProps) {
   const hrefs = {
@@ -69,6 +78,7 @@ export function ToolNavDropdown({
     relevance: relevanceHref,
     battle: battleHref,
     companyResearch: companyResearchHref,
+    marketResearch: marketResearchHref,
     indexNow: indexNowHref,
   };
 

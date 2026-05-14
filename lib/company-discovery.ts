@@ -6,6 +6,7 @@ import {
   clampScore,
   generateGeminiText,
   getGeminiApiKey,
+  getFirecrawlApiKeyFromDbOrEnv,
   parseJsonSafely,
 } from "@/lib/gemini";
 import {
@@ -57,6 +58,8 @@ interface DiscoveryRequest {
   contactPreference?: string;
   limit?: number;
   model: string;
+  apiKey?: string;
+  firecrawlApiKey?: string;
 }
 
 interface RawRankedCompany {
@@ -68,8 +71,11 @@ interface RawRankedCompany {
   relevanceScore?: number;
 }
 
-function getFirecrawlApiKey(): string {
-  const apiKey = process.env.FIRECRAWL_API_KEY?.trim();
+async function getFirecrawlApiKey(override?: string): Promise<string> {
+  const apiKey =
+    override?.trim() ||
+    (await getFirecrawlApiKeyFromDbOrEnv())?.trim() ||
+    process.env.FIRECRAWL_API_KEY?.trim();
   if (!apiKey) {
     throw new Error("Firecrawl API key is not configured");
   }
@@ -219,7 +225,7 @@ async function rankCandidates(
   candidates: DiscoveryCandidate[],
   request: DiscoveryRequest,
 ): Promise<CompanyDiscoveryResult[]> {
-  const key = getGeminiApiKey();
+  const key = await getGeminiApiKey(request.apiKey);
   const evidence = candidates
     .slice(0, 60)
     .map(
@@ -326,7 +332,7 @@ export async function discoverCompanies(
   if (!request.location?.trim()) throw new Error("location is required");
   if (!request.model?.trim()) throw new Error("model is required");
 
-  const apiKey = getFirecrawlApiKey();
+  const apiKey = await getFirecrawlApiKey(request.firecrawlApiKey);
   const app = new Firecrawl({ apiKey });
   const queries = buildQueries(request);
   const searchResults = await Promise.all(
