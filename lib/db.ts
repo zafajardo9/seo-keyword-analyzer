@@ -62,6 +62,20 @@ export function ensureSchema(): Promise<void> {
       CREATE INDEX IF NOT EXISTS tool_history_tool_idx
       ON tool_history (tool, updated_at DESC)
     `;
+    // Add google_sa_json column if it was created before this migration
+    await sql`
+      ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS google_sa_json TEXT
+    `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS shared_reports (
+        share_key TEXT PRIMARY KEY,
+        tool TEXT NOT NULL,
+        label TEXT NOT NULL,
+        payload JSONB NOT NULL,
+        view_count INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
   })().catch((err) => {
     initPromise = null;
     throw err;

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Brain,
   Sparkle,
   Warning,
   Globe,
@@ -21,7 +22,6 @@ import { RecommendationsPanel } from "@/components/recommendations-panel";
 import { PageAuditPanel } from "@/components/page-audit-panel";
 import { ModelSelector, getStoredModel } from "@/components/model-selector";
 import { PdfExport } from "@/components/pdf-export";
-import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
 import { ApiKeyManager, getStoredGeminiKey } from "@/components/api-key-manager";
 import { PageAudit, ScrapedContent, Recommendation } from "@/lib/types";
 import {
@@ -234,6 +234,10 @@ export default function AnalyzePage() {
     step === 3 && scrapedContent?.url
       ? `/company-research?url=${encodeURIComponent(scrapedContent.url)}`
       : "/company-research";
+  const geoAeoHref =
+    step === 3 && scrapedContent?.url
+      ? `/geo-aeo?url=${encodeURIComponent(scrapedContent.url)}`
+      : "/geo-aeo";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -257,11 +261,6 @@ export default function AnalyzePage() {
         <div className="flex items-center gap-4">
           <ApiKeyManager />
           <ModelSelector onModelChange={setModel} />
-          <ToolNavDropdown
-            relevanceHref={relevanceHref}
-            battleHref={battleHref}
-            companyResearchHref={companyResearchHref}
-          />
           {step === 3 && (
             <button
               onClick={handleReset}
@@ -440,6 +439,13 @@ export default function AnalyzePage() {
                         recommendations
                       </p>
                       <div className="flex items-center gap-3">
+                        <Link
+                          href={geoAeoHref}
+                          className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+                        >
+                          <Brain size={13} />
+                          Check GEO &amp; AEO
+                        </Link>
                         <Link
                           href={battleHref}
                           className="flex items-center gap-2 border border-border px-3 py-2 font-mono text-xs uppercase tracking-widest transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"

@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
 import { HistoryPanel, SaveToHistoryButton } from "@/components/history-panel";
 
 interface RelevanceSnapshot {
@@ -128,7 +127,6 @@ export function ContentRelevanceChecker({ initialUrl = "" }: ContentRelevanceChe
           />
           <ApiKeyManager />
           <ModelSelector onModelChange={setModel} />
-          <ToolNavDropdown />
         </div>
       </nav>
 

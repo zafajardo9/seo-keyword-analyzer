@@ -16,7 +16,9 @@ export type ToolName =
   | "battle"
   | "market-research"
   | "indexnow"
-  | "company-research";
+  | "company-research"
+  | "geo-aeo"
+  | "google-indexing";
 
 export interface HistoryItem<T = unknown> {
   id: string;
@@ -192,8 +194,8 @@ export function HistoryPanel<T = unknown>({
 
 interface SaveToHistoryButtonProps<T = unknown> {
   tool: ToolName;
-  /** Build the snapshot payload at click time */
-  buildPayload: () => { label: string; payload: T } | null;
+  /** Build the snapshot payload at click time. Return an `id` to upsert instead of insert. */
+  buildPayload: () => { id?: string; label: string; payload: T } | null;
   /** Called after successful save (e.g., to bump refreshToken) */
   onSaved?: (id: string) => void;
   /** Disable when no data to save */
@@ -223,6 +225,7 @@ export function SaveToHistoryButton<T = unknown>({
           tool,
           label: built.label,
           payload: built.payload,
+          ...(built.id ? { id: built.id } : {}),
         }),
       });
       if (!res.ok) throw new Error("Save failed");

@@ -186,3 +186,42 @@ export interface GeminiModel {
 }
 
 export type AnalysisStep = "url" | "analyzing" | "results";
+
+export type GeoDimensionKey =
+  | "eeatSignals"
+  | "factDataDensity"
+  | "sourceCitationQuality"
+  | "brandEntityClarity"
+  | "topicalAuthorityDepth";
+
+export type AeoDimensionKey =
+  | "directAnswerFormat"
+  | "questionCoverage"
+  | "structuredAnswerQuality"
+  | "faqOptimization"
+  | "passageLevelClarity";
+
+export type LlmCitationPotential = "High" | "Medium" | "Low";
+
+export interface GeoAeoDimension {
+  key: GeoDimensionKey | AeoDimensionKey;
+  label: string;
+  score: number;
+  explanation: string;
+  group: "geo" | "aeo";
+}
+
+export interface GeoAeoAudit {
+  overallScore: number;
+  geoScore: number;
+  aeoScore: number;
+  verdict: string;
+  llmCitationPotential: LlmCitationPotential;
+  llmCitationReasoning: string;
+  dimensions: GeoAeoDimension[];
+  topQuestionsAnswered: string[];
+  missingQuestionsToAdd: string[];
+  schemaMarkupOpportunities: string[];
+  geoRecommendations: string[];
+  aeoRecommendations: string[];
+}

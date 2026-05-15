@@ -8,7 +8,9 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import {
   ArrowRight,
+  Brain,
   Buildings,
+  GoogleLogo,
   Lightning,
   MagnifyingGlass,
   Notebook,
@@ -232,6 +234,25 @@ export function HeroSection() {
                 IndexNow Submit
                 <Lightning size={13} />
               </Link>
+
+              <Link
+                href="/geo-aeo"
+                className={cn(
+                  "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
+                  !model && !hasKey && "pointer-events-none opacity-50",
+                )}
+              >
+                GEO &amp; AEO
+                <Brain size={13} />
+              </Link>
+
+              <Link
+                href="/google-indexing"
+                className="flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
+              >
+                Google Indexing
+                <GoogleLogo size={13} weight="bold" />
+              </Link>
             </div>
             {!model && !hasKey && (
               <span className="font-mono text-[10px] text-muted-foreground">
@@ -302,5 +323,15 @@ const FEATURES = [
     tag: "06 · Research",
     title: "Company Research",
     desc: "Crawl competitor and partner websites to collect public contacts, company summaries, and outreach fit.",
+  },
+  {
+    tag: "07 · Optimize",
+    title: "GEO & AEO Analyzer",
+    desc: "Score how likely your content is to be cited by AI assistants like ChatGPT, Gemini, and Perplexity.",
+  },
+  {
+    tag: "08 · Index",
+    title: "Google Indexing",
+    desc: "Request Google to crawl and re-index specific URLs immediately using the official Indexing API.",
   },
 ];

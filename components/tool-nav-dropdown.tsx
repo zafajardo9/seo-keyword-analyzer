@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  Brain,
   Buildings,
   CaretDown,
   ChartLineUp,
@@ -24,6 +25,7 @@ interface ToolNavDropdownProps {
   companyResearchHref?: string;
   marketResearchHref?: string;
   indexNowHref?: string;
+  geoAeoHref?: string;
 }
 
 const TOOL_LINKS = [
@@ -63,6 +65,12 @@ const TOOL_LINKS = [
     description: "Push URLs to search engines",
     icon: Lightning,
   },
+  {
+    key: "geoAeo",
+    label: "GEO & AEO Analyzer",
+    description: "Score AI discoverability and answer-engine fit",
+    icon: Brain,
+  },
 ] as const;
 
 export function ToolNavDropdown({
@@ -72,6 +80,7 @@ export function ToolNavDropdown({
   companyResearchHref = "/company-research",
   marketResearchHref = "/market-research",
   indexNowHref = "/indexnow",
+  geoAeoHref = "/geo-aeo",
 }: ToolNavDropdownProps) {
   const hrefs = {
     analyze: analyzeHref,
@@ -80,6 +89,7 @@ export function ToolNavDropdown({
     companyResearch: companyResearchHref,
     marketResearch: marketResearchHref,
     indexNow: indexNowHref,
+    geoAeo: geoAeoHref,
   };
 
   return (

@@ -23,7 +23,6 @@ import { ApiKeyManager, getStoredGeminiKey } from "@/components/api-key-manager"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
 import { HistoryPanel, SaveToHistoryButton } from "@/components/history-panel";
 
 interface MarketSnapshot {
@@ -137,7 +136,6 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
           />
           <ApiKeyManager />
           <ModelSelector onModelChange={setModel} />
-          <ToolNavDropdown />
         </div>
       </nav>
 

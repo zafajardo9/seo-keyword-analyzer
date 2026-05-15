@@ -50,7 +50,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { ToolNavDropdown } from "@/components/tool-nav-dropdown";
 
 const MAX_HISTORY = 8;
 const CONCURRENCY = 2;
@@ -786,7 +785,6 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
         <div className="flex items-center gap-4">
           <ApiKeyManager />
           <ModelSelector onModelChange={setModel} />
-          <ToolNavDropdown />
         </div>
       </nav>
 

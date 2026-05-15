@@ -12,6 +12,8 @@ const ALLOWED_TOOLS = new Set([
   "market-research",
   "indexnow",
   "company-research",
+  "geo-aeo",
+  "google-indexing",
 ]);
 
 function validateTool(tool: string | null): string | null {
