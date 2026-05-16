@@ -31,6 +31,30 @@ import {
   formatCacheAge,
   CacheEntry,
 } from "@/lib/analysis-cache";
+import { InfoButton, ToolInfoDrawer } from "@/components/tool-info-drawer";
+
+const SEO_INFO = {
+  toolName: "SEO Analyzer",
+  tagline: "Paste any page URL and get a complete picture of how well it's set up for search — what's working, what's not, and where to focus next.",
+  sections: [
+    {
+      title: "Your overall search readiness score",
+      body: "A single score that summarizes the page across the most important search factors — so you immediately know if the page is in good shape or needs work.",
+    },
+    {
+      title: "The keywords your page already signals",
+      body: "The actual words and phrases your page is communicating to search engines. Useful for checking whether you're sending the right signals for the terms you want to rank for.",
+    },
+    {
+      title: "Content ideas to grow your reach",
+      body: "Blog topic suggestions that build on what your page already talks about, helping you expand topical relevance over time without starting from scratch.",
+    },
+    {
+      title: "What's strong and what to fix",
+      body: "A plain-language breakdown of what the page does well and what's holding it back, with specific actions ranked by how much they'd improve your results.",
+    },
+  ],
+};
 
 type Step = 1 | 2 | 3;
 
@@ -58,6 +82,7 @@ export default function AnalyzePage() {
   const [keywordsExpanded, setKeywordsExpanded] = React.useState(false);
   const [cacheEntry, setCacheEntry] = React.useState<CacheEntry | null>(null);
   const [currentUrl, setCurrentUrl] = React.useState<string>("");
+  const [infoOpen, setInfoOpen] = React.useState(false);
 
   React.useEffect(() => {
     const stored = getStoredModel();
@@ -241,7 +266,7 @@ export default function AnalyzePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
+      <nav className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <div className="flex items-center gap-4">
           <Link
             href="/"
@@ -256,6 +281,7 @@ export default function AnalyzePage() {
             <span className="font-mono text-xs font-semibold">
               SEO Analyzer
             </span>
+            <InfoButton onClick={() => setInfoOpen(true)} />
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -272,6 +298,8 @@ export default function AnalyzePage() {
           )}
         </div>
       </nav>
+
+      <ToolInfoDrawer open={infoOpen} onClose={() => setInfoOpen(false)} {...SEO_INFO} />
 
       <main className="flex flex-1 flex-col items-center px-6 py-10">
         <div className="w-full max-w-4xl">

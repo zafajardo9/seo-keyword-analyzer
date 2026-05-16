@@ -18,7 +18,8 @@ export type ToolName =
   | "indexnow"
   | "company-research"
   | "geo-aeo"
-  | "google-indexing";
+  | "google-indexing"
+  | "prompt-analyzer";
 
 export interface HistoryItem<T = unknown> {
   id: string;

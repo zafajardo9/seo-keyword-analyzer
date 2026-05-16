@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { IndexNowSubmit } from "@/components/indexnow-submit";
+import { IndexNowInfoButton } from "@/components/indexnow-info-button";
 
 export const metadata = {
   title: "IndexNow Submitter — SEO Analyzer",
@@ -11,7 +12,7 @@ export const metadata = {
 export default function IndexNowPage() {
   return (
     <div className="relative flex min-h-screen flex-col">
-      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
+      <nav className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <Link
           href="/"
           className="flex items-center gap-2 font-mono text-sm font-semibold tracking-tight text-foreground"
@@ -19,13 +20,19 @@ export default function IndexNowPage() {
           <Sparkle size={16} weight="fill" className="text-primary" />
           <span>SEO Analyzer</span>
         </Link>
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft size={12} />
-          Back home
-        </Link>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <span className="font-mono text-xs font-semibold text-foreground">IndexNow Submit</span>
+            <IndexNowInfoButton />
+          </div>
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft size={12} />
+            Back home
+          </Link>
+        </div>
       </nav>
 
       <main className="flex flex-1 flex-col items-center px-6 py-12">

@@ -14,6 +14,7 @@ const ALLOWED_TOOLS = new Set([
   "company-research",
   "geo-aeo",
   "google-indexing",
+  "prompt-analyzer",
 ]);
 
 function validateTool(tool: string | null): string | null {

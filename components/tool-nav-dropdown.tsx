@@ -9,7 +9,9 @@ import {
   Lightning,
   MagnifyingGlass,
   Notebook,
+  Robot,
   Sword,
+  TextAlignLeft,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +28,8 @@ interface ToolNavDropdownProps {
   marketResearchHref?: string;
   indexNowHref?: string;
   geoAeoHref?: string;
+  promptAnalyzerHref?: string;
+  crawlMonitorHref?: string;
 }
 
 const TOOL_LINKS = [
@@ -71,6 +75,18 @@ const TOOL_LINKS = [
     description: "Score AI discoverability and answer-engine fit",
     icon: Brain,
   },
+  {
+    key: "promptAnalyzer",
+    label: "Prompt Analyzer",
+    description: "Find AI search prompts that surface your page",
+    icon: TextAlignLeft,
+  },
+  {
+    key: "crawlMonitor",
+    label: "AI Crawl Monitor",
+    description: "See which AI bots are crawling your site",
+    icon: Robot,
+  },
 ] as const;
 
 export function ToolNavDropdown({
@@ -81,6 +97,8 @@ export function ToolNavDropdown({
   marketResearchHref = "/market-research",
   indexNowHref = "/indexnow",
   geoAeoHref = "/geo-aeo",
+  promptAnalyzerHref = "/prompt-analyzer",
+  crawlMonitorHref = "/crawl-monitor",
 }: ToolNavDropdownProps) {
   const hrefs = {
     analyze: analyzeHref,
@@ -90,6 +108,8 @@ export function ToolNavDropdown({
     marketResearch: marketResearchHref,
     indexNow: indexNowHref,
     geoAeo: geoAeoHref,
+    promptAnalyzer: promptAnalyzerHref,
+    crawlMonitor: crawlMonitorHref,
   };
 
   return (

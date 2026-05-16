@@ -7,12 +7,18 @@ import {
   Atom,
   Brain,
   Broadcast,
+  CaretDown,
+  CaretUp,
   ChatCircle,
   ChartPolar,
+  Check,
+  Copy,
   Eye,
+  MagnifyingGlass,
   Question,
   Sparkle,
   Target,
+  TextAlignLeft,
 } from "@phosphor-icons/react";
 import {
   PolarAngleAxis,
@@ -21,7 +27,7 @@ import {
   RadarChart,
   ResponsiveContainer,
 } from "recharts";
-import { GeoAeoAudit, GeoAeoDimension, LlmCitationPotential } from "@/lib/types";
+import { GeoAeoAudit, GeoAeoDimension, LlmCitationPotential, PromptAnalysis, PromptGrade, PromptLikelihood, PromptResult } from "@/lib/types";
 
 interface SharedReportViewProps {
   label: string;
@@ -30,6 +36,7 @@ interface SharedReportViewProps {
   viewCount: number;
   createdAt: string;
   audit: GeoAeoAudit | null;
+  promptAnalysis?: PromptAnalysis | null;
 }
 
 export function SharedReportView({
@@ -38,18 +45,26 @@ export function SharedReportView({
   viewCount,
   createdAt,
   audit,
+  promptAnalysis,
 }: SharedReportViewProps) {
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
+      <nav className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <div className="flex items-center gap-3">
           <Sparkle size={14} weight="fill" className="text-primary" />
           <span className="font-mono text-sm font-semibold tracking-tight">SEO Analyzer</span>
           <span className="text-border">|</span>
-          <div className="flex items-center gap-1.5">
-            <Brain size={13} className="text-primary" />
-            <span className="font-mono text-xs font-semibold">GEO &amp; AEO Report</span>
-          </div>
+          {promptAnalysis ? (
+            <div className="flex items-center gap-1.5">
+              <TextAlignLeft size={13} className="text-primary" />
+              <span className="font-mono text-xs font-semibold">Prompt Analyzer Report</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <Brain size={13} className="text-primary" />
+              <span className="font-mono text-xs font-semibold">GEO &amp; AEO Report</span>
+            </div>
+          )}
         </div>
         <Link
           href="/"
@@ -89,7 +104,9 @@ export function SharedReportView({
             </p>
           </div>
 
-          {audit ? (
+          {promptAnalysis ? (
+            <SharedPromptResults analysis={promptAnalysis} />
+          ) : audit ? (
             <AuditResults audit={audit} />
           ) : (
             <div className="border border-border p-8 text-center">
@@ -285,6 +302,185 @@ function ListCard({
           <p key={i} className="font-mono text-xs leading-relaxed text-foreground">{item}</p>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Prompt Analyzer shared view ────────────────────────────────────────────
+
+const GRADE_STYLES: Record<PromptGrade, string> = {
+  A: "border-green-500/50 bg-green-500/10 text-green-600 dark:text-green-400",
+  B: "border-blue-500/40 bg-blue-500/8 text-blue-600 dark:text-blue-400",
+  C: "border-yellow-500/40 bg-yellow-500/8 text-yellow-600 dark:text-yellow-400",
+  D: "border-orange-500/40 bg-orange-500/8 text-orange-600 dark:text-orange-400",
+  F: "border-destructive/40 bg-destructive/8 text-destructive",
+};
+
+const LIKELIHOOD_STYLES: Record<PromptLikelihood, string> = {
+  High: "border-green-500/40 bg-green-500/8 text-green-600 dark:text-green-400",
+  Medium: "border-yellow-500/40 bg-yellow-500/8 text-yellow-600 dark:text-yellow-400",
+  Low: "border-border bg-muted/30 text-muted-foreground",
+};
+
+function SharedGradeBadge({ grade }: { grade: PromptGrade }) {
+  return (
+    <span className={`inline-flex h-6 w-6 items-center justify-center border font-mono text-xs font-bold ${GRADE_STYLES[grade]}`}>
+      {grade}
+    </span>
+  );
+}
+
+function SharedPromptResults({ analysis }: { analysis: PromptAnalysis }) {
+  return (
+    <div className="flex flex-col gap-5">
+      {/* Score card */}
+      <div className="flex flex-col gap-4 border border-border p-5 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Sparkle size={13} weight="fill" className="text-primary" />
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              AI Prompt Visibility Score
+            </span>
+          </div>
+          <div className="flex items-end gap-3">
+            <span className="font-mono text-5xl font-bold tracking-tight">{analysis.overallScore}</span>
+            <span className="pb-1.5 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">/ 100</span>
+            <span className={`inline-flex h-10 w-10 items-center justify-center border font-mono text-2xl font-bold ${GRADE_STYLES[analysis.overallGrade]}`}>
+              {analysis.overallGrade}
+            </span>
+          </div>
+          <p className="max-w-xl font-mono text-xs leading-relaxed text-muted-foreground">
+            {analysis.aiVisibilityVerdict}
+          </p>
+        </div>
+      </div>
+
+      {/* Google Search queries */}
+      {analysis.searchQueries && analysis.searchQueries.length > 0 && (
+        <div className="flex flex-col gap-2 border border-border bg-muted/10 p-4">
+          <div className="flex items-center gap-2">
+            <MagnifyingGlass size={12} className="text-primary" />
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+              Google searches run by Gemini
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {analysis.searchQueries.map((q: string, i: number) => (
+              <span key={i} className="inline-flex items-center border border-border bg-background px-2.5 py-1 font-mono text-[10px] text-foreground">
+                {q}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Strengths + Gaps */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-3 border border-primary/30 bg-primary/5 p-4">
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Top Strengths</span>
+          {analysis.topStrengths.map((s, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="mt-0.5 font-mono text-[10px] text-primary">✓</span>
+              <p className="font-mono text-xs leading-relaxed text-foreground">{s}</p>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-3 border border-border bg-muted/20 p-4">
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Critical Gaps</span>
+          {analysis.criticalGaps.map((g, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="mt-0.5 font-mono text-[10px] text-muted-foreground">✗</span>
+              <p className="font-mono text-xs leading-relaxed text-foreground">{g}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Prompts */}
+      <div className="flex flex-col gap-1">
+        <div className="mb-2 flex items-center gap-2">
+          <MagnifyingGlass size={13} className="text-primary" />
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            AI Prompt Predictions
+          </span>
+        </div>
+        {analysis.prompts.map((p: PromptResult, i: number) => (
+          <SharedPromptRow key={i} prompt={p} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SharedPromptRow({ prompt: p }: { prompt: PromptResult }) {
+  const [open, setOpen] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
+
+  function handleCopy(e: React.MouseEvent) {
+    e.stopPropagation();
+    navigator.clipboard.writeText(p.prompt).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <div className="border border-border">
+      <div className="flex items-start gap-3 p-4 transition-colors hover:bg-muted/30">
+        <div className="mt-0.5 shrink-0"><SharedGradeBadge grade={p.grade} /></div>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex min-w-0 flex-1 flex-col gap-1 text-left"
+        >
+          <p className="font-mono text-xs font-semibold text-foreground">&ldquo;{p.prompt}&rdquo;</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`inline-flex items-center border px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest ${LIKELIHOOD_STYLES[p.likelihood]}`}>
+              {p.likelihood}
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">{p.category}</span>
+            <span className="font-mono text-[10px] text-muted-foreground">· Score: {p.score}</span>
+          </div>
+        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCopy}
+            title="Copy prompt"
+            className="text-muted-foreground transition-colors hover:text-primary"
+          >
+            {copied ? (
+              <Check size={13} className="text-green-500" />
+            ) : (
+              <Copy size={13} />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {open ? <CaretUp size={12} /> : <CaretDown size={12} />}
+          </button>
+        </div>
+      </div>
+      {open && (
+        <div className="flex flex-col gap-3 border-t border-border bg-muted/10 px-4 pb-4 pt-3">
+          <div>
+            <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Why</span>
+            <p className="font-mono text-xs leading-relaxed text-foreground">{p.reasoning}</p>
+          </div>
+          <div>
+            <span className="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Suggestions</span>
+            {p.suggestions.map((s: string, j: number) => (
+              <div key={j} className="flex items-start gap-2 mb-1">
+                <span className="mt-0.5 font-mono text-[10px] text-primary">→</span>
+                <p className="font-mono text-xs leading-relaxed text-foreground">{s}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

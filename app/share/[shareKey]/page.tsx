@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { SharedReportView } from "@/components/shared-report-view";
-import { GeoAeoAudit } from "@/lib/types";
+import { GeoAeoAudit, PromptAnalysis } from "@/lib/types";
 
 interface SharedReport {
   shareKey: string;
@@ -45,7 +45,8 @@ export default async function SharePage({
       shareKey={report.shareKey}
       viewCount={report.viewCount}
       createdAt={report.createdAt}
-      audit={report.tool === "geo-aeo" ? (report.payload as GeoAeoAudit) : null}
+      audit={report.tool === "geo-aeo" ? (report.payload as { audit: GeoAeoAudit }).audit ?? (report.payload as GeoAeoAudit) : null}
+      promptAnalysis={report.tool === "prompt-analyzer" ? (report.payload as { analysis: PromptAnalysis }).analysis ?? null : null}
     />
   );
 }

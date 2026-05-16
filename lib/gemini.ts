@@ -85,6 +85,72 @@ export async function generateGeminiText(
   return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 }
 
+export interface GeminiSearchResult {
+  text: string;
+  searchQueries: string[];
+}
+
+/**
+ * Calls Gemini with Google Search grounding enabled.
+ * Gemini will automatically run Google searches to ground its response
+ * in real, current web data before answering.
+ *
+ * Gemini 2.x uses the `google_search` tool.
+ * Gemini 1.5 uses `google_search_retrieval` with dynamic retrieval.
+ */
+export async function generateGeminiTextWithSearch(
+  model: string,
+  prompt: string,
+  key: string | undefined,
+  generationConfig: GeminiGenerationConfig
+): Promise<GeminiSearchResult> {
+  const modelId = model.replace("models/", "");
+
+  // Gemini 2.x+ uses google_search; 1.5 uses google_search_retrieval
+  const isGemini2 = /gemini-2|gemini-exp|gemini-pro-exp/.test(modelId);
+  const searchTool = isGemini2
+    ? { google_search: {} }
+    : {
+        google_search_retrieval: {
+          dynamic_retrieval_config: {
+            mode: "MODE_DYNAMIC",
+            dynamic_threshold: 0.3,
+          },
+        },
+      };
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${key}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        tools: [searchTool],
+        generationConfig,
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Gemini API error (search): ${err}`);
+  }
+
+  const data = await res.json();
+
+  // Extract the text — when grounding is active the response may have multiple parts
+  const parts: Array<{ text?: string }> =
+    data?.candidates?.[0]?.content?.parts ?? [];
+  const text = parts.map((p) => p.text ?? "").join("");
+
+  // Extract the queries Gemini actually ran against Google
+  const searchQueries: string[] =
+    data?.candidates?.[0]?.groundingMetadata?.webSearchQueries ?? [];
+
+  return { text, searchQueries };
+}
+
 export function cleanJsonText(rawText: string): string {
   return rawText
     .replace(/```json\n?/g, "")

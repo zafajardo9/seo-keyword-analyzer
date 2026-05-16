@@ -18,7 +18,31 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { HistoryPanel, SaveToHistoryButton } from "@/components/history-panel";
+import { InfoButton, ToolInfoDrawer } from "@/components/tool-info-drawer";
 import type { UrlResult } from "@/app/api/google-indexing/route";
+
+const GOOGLE_INDEXING_INFO = {
+  toolName: "Google Indexing",
+  tagline: "Ask Google to crawl and re-index specific pages right now — no waiting for Google's next scheduled visit to your site.",
+  sections: [
+    {
+      title: "When should you use this?",
+      body: "Anytime you publish something new, make significant changes to a page, or notice Google seems to be showing an outdated version of your content in search results.",
+    },
+    {
+      title: "What actually happens",
+      body: "A direct request is sent to Google's Indexing API, signaling that a URL is ready to be crawled. Google typically processes these within minutes to a few hours — far faster than waiting for a routine crawl.",
+    },
+    {
+      title: "What you need to get started",
+      body: "A Google service account with the Indexing API enabled. You paste the JSON credentials from your Google Cloud console — they stay in your browser and are never stored anywhere.",
+    },
+    {
+      title: "How to read the results",
+      body: "A successful response means Google accepted the request and will crawl the page soon. You can then verify the indexed version in Google Search Console once the crawl is complete.",
+    },
+  ],
+};
 
 interface IndexingSnapshot {
   urlsText: string;
@@ -99,6 +123,7 @@ export function GoogleIndexingPanel() {
   const [results, setResults] = React.useState<UrlResult[]>([]);
   const [submitError, setSubmitError] = React.useState("");
   const [historyRefresh, setHistoryRefresh] = React.useState(0);
+  const [infoOpen, setInfoOpen] = React.useState(false);
 
   const urlList = React.useMemo(
     () => urlsText.split(/\r?\n/).map((u) => u.trim()).filter(Boolean),
@@ -200,7 +225,7 @@ export function GoogleIndexingPanel() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
+      <nav className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground">
             <ArrowLeft size={12} />
@@ -210,6 +235,7 @@ export function GoogleIndexingPanel() {
           <div className="flex items-center gap-1.5">
             <GoogleLogo size={13} weight="bold" className="text-primary" />
             <span className="font-mono text-xs font-semibold">Google Indexing</span>
+            <InfoButton onClick={() => setInfoOpen(true)} />
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -224,6 +250,8 @@ export function GoogleIndexingPanel() {
           />
         </div>
       </nav>
+
+      <ToolInfoDrawer open={infoOpen} onClose={() => setInfoOpen(false)} {...GOOGLE_INDEXING_INFO} />
 
       <main className="flex flex-1 flex-col items-center px-6 py-10">
         <div className="w-full max-w-3xl space-y-10">

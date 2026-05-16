@@ -76,6 +76,31 @@ export function ensureSchema(): Promise<void> {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS connected_sites (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        domain TEXT NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS crawl_logs (
+        id BIGSERIAL PRIMARY KEY,
+        site_id TEXT NOT NULL,
+        path TEXT NOT NULL,
+        user_agent TEXT,
+        bot_name TEXT,
+        bot_company TEXT,
+        is_ai_bot BOOLEAN NOT NULL DEFAULT FALSE,
+        ts TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    await sql`
+      CREATE INDEX IF NOT EXISTS crawl_logs_site_ts_idx
+      ON crawl_logs (site_id, ts DESC)
+    `;
   })().catch((err) => {
     initPromise = null;
     throw err;

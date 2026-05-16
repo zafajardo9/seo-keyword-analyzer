@@ -11,6 +11,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { HistoryPanel, SaveToHistoryButton } from "@/components/history-panel";
+import { InfoButton, ToolInfoDrawer } from "@/components/tool-info-drawer";
+
+const RELEVANCE_INFO = {
+  toolName: "Content Relevance Checker",
+  tagline: "Check whether a piece of content — a draft or a live page — actually matches what someone searching for your target keyword is looking for.",
+  sections: [
+    {
+      title: "Does your content match the intent?",
+      body: "When someone searches a keyword, they have a specific expectation. This tool checks whether your content meets that expectation or drifts off-topic, so you stop guessing and know for sure.",
+    },
+    {
+      title: "What's missing from your content",
+      body: "Topics and questions that searchers expect to find on a page like yours but are absent from what you've written. Filling these gaps directly improves how relevant your page feels.",
+    },
+    {
+      title: "Specific fixes and rewrites",
+      body: "Suggested headings, sections, and rewrites that would make your content a stronger match — not generic advice, but changes tied to your exact keyword and content.",
+    },
+    {
+      title: "A better title and description",
+      body: "An improved version of your page title and meta description, written to match what searchers expect and to increase the chance they click through from search results.",
+    },
+  ],
+};
 
 interface RelevanceSnapshot {
   keyword: string;
@@ -32,6 +56,7 @@ export function ContentRelevanceChecker({ initialUrl = "" }: ContentRelevanceChe
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [historyRefresh, setHistoryRefresh] = React.useState(0);
+  const [infoOpen, setInfoOpen] = React.useState(false);
 
   React.useEffect(() => {
     const stored = getStoredModel();
@@ -98,7 +123,7 @@ export function ContentRelevanceChecker({ initialUrl = "" }: ContentRelevanceChe
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
+      <nav className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <div className="flex items-center gap-4">
           <Link
             href="/"
@@ -111,6 +136,7 @@ export function ContentRelevanceChecker({ initialUrl = "" }: ContentRelevanceChe
           <div className="flex items-center gap-1.5">
             <Sparkle size={13} weight="fill" className="text-primary" />
             <span className="font-mono text-xs font-semibold">Content Relevance Checker</span>
+            <InfoButton onClick={() => setInfoOpen(true)} />
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -129,6 +155,8 @@ export function ContentRelevanceChecker({ initialUrl = "" }: ContentRelevanceChe
           <ModelSelector onModelChange={setModel} />
         </div>
       </nav>
+
+      <ToolInfoDrawer open={infoOpen} onClose={() => setInfoOpen(false)} {...RELEVANCE_INFO} />
 
       <main className="flex flex-1 flex-col items-center px-6 py-10">
         <div className="w-full max-w-6xl space-y-8">

@@ -14,8 +14,10 @@ import {
   Lightning,
   MagnifyingGlass,
   Notebook,
+  Robot,
   Sparkle,
   Sword,
+  TextAlignLeft,
 } from "@phosphor-icons/react";
 import { ModelSelector } from "@/components/model-selector";
 import { ApiKeyManager, hasAnyKey } from "@/components/api-key-manager";
@@ -171,11 +173,12 @@ export function HeroSection() {
           >
             <ModelSelector onModelChange={setModel} />
 
-            <div className="flex flex-col items-center gap-3 sm:flex-row">
+            <div className="flex w-full max-w-2xl flex-col items-center gap-3">
+              {/* Primary CTA */}
               <Link
                 href="/analyze"
                 className={cn(
-                  "flex items-center gap-2 border border-primary bg-primary px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:scale-95",
+                  "flex items-center gap-2 border border-primary bg-primary px-6 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:scale-95",
                   !model && !hasKey && "pointer-events-none opacity-50",
                 )}
               >
@@ -183,76 +186,32 @@ export function HeroSection() {
                 <ArrowRight size={13} />
               </Link>
 
-              <Link
-                href="/relevance"
-                className={cn(
-                  "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                  !model && !hasKey && "pointer-events-none opacity-50",
-                )}
-              >
-                Check Draft Relevance
-                <Notebook size={13} />
-              </Link>
-
-              <Link
-                href="/battle"
-                className={cn(
-                  "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                  !model && !hasKey && "pointer-events-none opacity-50",
-                )}
-              >
-                Battle Of Blogs
-                <Sword size={13} />
-              </Link>
-
-              <Link
-                href="/company-research"
-                className={cn(
-                  "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                  !model && !hasKey && "pointer-events-none opacity-50",
-                )}
-              >
-                Company Research
-                <Buildings size={13} />
-              </Link>
-
-              <Link
-                href="/market-research"
-                className={cn(
-                  "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                  !model && !hasKey && "pointer-events-none opacity-50",
-                )}
-              >
-                Market Research
-                <MagnifyingGlass size={13} />
-              </Link>
-
-              <Link
-                href="/indexnow"
-                className="flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-              >
-                IndexNow Submit
-                <Lightning size={13} />
-              </Link>
-
-              <Link
-                href="/geo-aeo"
-                className={cn(
-                  "flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                  !model && !hasKey && "pointer-events-none opacity-50",
-                )}
-              >
-                GEO &amp; AEO
-                <Brain size={13} />
-              </Link>
-
-              <Link
-                href="/google-indexing"
-                className="flex items-center gap-2 border border-border px-5 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-              >
-                Google Indexing
-                <GoogleLogo size={13} weight="bold" />
-              </Link>
+              {/* Tools grid */}
+              <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3">
+                {[
+                  { href: "/relevance", label: "Relevance Checker", icon: <Notebook size={13} />, needsKey: true },
+                  { href: "/battle", label: "Battle of Blogs", icon: <Sword size={13} />, needsKey: true },
+                  { href: "/company-research", label: "Company Research", icon: <Buildings size={13} />, needsKey: true },
+                  { href: "/market-research", label: "Market Research", icon: <MagnifyingGlass size={13} />, needsKey: true },
+                  { href: "/indexnow", label: "IndexNow Submit", icon: <Lightning size={13} />, needsKey: false },
+                  { href: "/geo-aeo", label: "GEO & AEO", icon: <Brain size={13} />, needsKey: true },
+                  { href: "/google-indexing", label: "Google Indexing", icon: <GoogleLogo size={13} weight="bold" />, needsKey: false },
+                  { href: "/prompt-analyzer", label: "Prompt Analyzer", icon: <TextAlignLeft size={13} />, needsKey: true },
+                  { href: "/crawl-monitor", label: "AI Crawl Monitor", icon: <Robot size={13} />, needsKey: false },
+                ].map((tool) => (
+                  <Link
+                    key={tool.href}
+                    href={tool.href}
+                    className={cn(
+                      "flex items-center justify-between gap-2 border border-border px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
+                      tool.needsKey && !model && !hasKey && "pointer-events-none opacity-50",
+                    )}
+                  >
+                    <span className="truncate">{tool.label}</span>
+                    <span className="shrink-0">{tool.icon}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
             {!model && !hasKey && (
               <span className="font-mono text-[10px] text-muted-foreground">
@@ -333,5 +292,10 @@ const FEATURES = [
     tag: "08 · Index",
     title: "Google Indexing",
     desc: "Request Google to crawl and re-index specific URLs immediately using the official Indexing API.",
+  },
+  {
+    tag: "09 · Predict",
+    title: "Prompt Analyzer",
+    desc: "Discover which AI search prompts would surface your page in Google AI, Perplexity, or ChatGPT — with grades and improvement suggestions.",
   },
 ];

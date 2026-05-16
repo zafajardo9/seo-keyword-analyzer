@@ -50,6 +50,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { InfoButton, ToolInfoDrawer } from "@/components/tool-info-drawer";
+
+const COMPANY_INFO = {
+  toolName: "Company Research",
+  tagline: "Paste a list of company websites and get a full profile of each one — what they do, who they serve, and how to contact them.",
+  sections: [
+    {
+      title: "Company summaries",
+      body: "A plain-language description of what each company does, who their customers are, and what space they operate in — so you quickly understand who you're looking at.",
+    },
+    {
+      title: "Contact information",
+      body: "Email addresses, phone numbers, social profiles, and contact pages gathered from the site and organized for outreach — no manual digging required.",
+    },
+    {
+      title: "Outreach fit score",
+      body: "A confidence score that reflects how complete and reliable the information gathered is, so you know which results to trust before you reach out.",
+    },
+    {
+      title: "Discover companies automatically",
+      body: "Don't have a list yet? Describe the type of company you're looking for — market, location, size — and the tool finds relevant ones for you.",
+    },
+  ],
+};
 
 const MAX_HISTORY = 8;
 const CONCURRENCY = 2;
@@ -112,6 +136,7 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
   const [runNote, setRunNote] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState<string | null>(null);
+  const [infoOpen, setInfoOpen] = React.useState(false);
   const cancelRef = React.useRef(false);
   const pausedRef = React.useRef(false);
 
@@ -765,7 +790,7 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
+      <nav className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <div className="flex items-center gap-4">
           <Link
             href="/"
@@ -780,6 +805,7 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
             <span className="font-mono text-xs font-semibold">
               Company Research
             </span>
+            <InfoButton onClick={() => setInfoOpen(true)} />
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -787,6 +813,8 @@ export function CompanyResearch({ initialUrl = "" }: CompanyResearchProps) {
           <ModelSelector onModelChange={setModel} />
         </div>
       </nav>
+
+      <ToolInfoDrawer open={infoOpen} onClose={() => setInfoOpen(false)} {...COMPANY_INFO} />
 
       <main className="flex flex-1 flex-col items-center px-6 py-10">
         <div className="grid w-full max-w-7xl gap-8 xl:grid-cols-[360px_minmax(0,1fr)]">

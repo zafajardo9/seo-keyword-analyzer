@@ -10,6 +10,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { HistoryPanel, SaveToHistoryButton } from "@/components/history-panel";
+import { InfoButton, ToolInfoDrawer } from "@/components/tool-info-drawer";
+
+const BATTLE_INFO = {
+  toolName: "Battle of Blogs",
+  tagline: "Drop in two blog post URLs and find out which one would win if they competed for the same search traffic.",
+  sections: [
+    {
+      title: "Head-to-head scoring",
+      body: "Both pages are evaluated across the same criteria — topic depth, search intent, clarity, and credibility — so you get a fair, side-by-side comparison without any guesswork.",
+    },
+    {
+      title: "Who wins and why",
+      body: "A clear verdict with the reasoning behind it, so you understand the actual gap rather than just seeing a number difference.",
+    },
+    {
+      title: "Strengths and weaknesses",
+      body: "What each page does well and where it falls short — makes it easy to know exactly what to improve on the losing side.",
+    },
+    {
+      title: "Quick takeaways",
+      body: "The most important differences between the two pages, summarized so you can act on them right away.",
+    },
+  ],
+};
 
 interface BattleSnapshot {
   leftUrl: string;
@@ -29,6 +53,7 @@ export function BlogBattle({ initialLeftUrl = "" }: BlogBattleProps) {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [historyRefresh, setHistoryRefresh] = React.useState(0);
+  const [infoOpen, setInfoOpen] = React.useState(false);
 
   React.useEffect(() => {
     const stored = getStoredModel();
@@ -87,7 +112,7 @@ export function BlogBattle({ initialLeftUrl = "" }: BlogBattleProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
+      <nav className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <div className="flex items-center gap-4">
           <Link
             href="/"
@@ -100,6 +125,7 @@ export function BlogBattle({ initialLeftUrl = "" }: BlogBattleProps) {
           <div className="flex items-center gap-1.5">
             <Sword size={13} weight="fill" className="text-primary" />
             <span className="font-mono text-xs font-semibold">Battle of Blogs</span>
+            <InfoButton onClick={() => setInfoOpen(true)} />
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -117,6 +143,8 @@ export function BlogBattle({ initialLeftUrl = "" }: BlogBattleProps) {
           <ModelSelector onModelChange={setModel} />
         </div>
       </nav>
+
+      <ToolInfoDrawer open={infoOpen} onClose={() => setInfoOpen(false)} {...BATTLE_INFO} />
 
       <main className="flex flex-1 flex-col items-center px-6 py-10">
         <div className="w-full max-w-6xl space-y-8">

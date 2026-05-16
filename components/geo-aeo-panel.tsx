@@ -31,6 +31,30 @@ import { ApiKeyManager, getStoredGeminiKey } from "@/components/api-key-manager"
 import { HistoryPanel, SaveToHistoryButton } from "@/components/history-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InfoButton, ToolInfoDrawer } from "@/components/tool-info-drawer";
+
+const GEO_AEO_INFO = {
+  toolName: "GEO & AEO Analyzer",
+  tagline: "Find out how likely your page is to be cited or recommended by AI assistants like ChatGPT, Gemini, or Perplexity when someone asks a related question.",
+  sections: [
+    {
+      title: "Will AI models recommend your page?",
+      body: "AI assistants pull from pages they consider trustworthy, well-written, and authoritative. This score tells you where your page stands on those signals — and what's holding it back.",
+    },
+    {
+      title: "Will your page be the direct answer?",
+      body: "Sometimes AI gives one direct answer to a question. This part of the score looks at whether your content is structured in a way that makes it easy for AI to extract and present as that answer.",
+    },
+    {
+      title: "Questions your page already answers",
+      body: "The specific questions your content is a strong match for right now, based on how it's written and what it covers.",
+    },
+    {
+      title: "What to add or improve",
+      body: "Questions your page should be answering but doesn't — plus practical steps to make your content more likely to be cited in AI-generated responses.",
+    },
+  ],
+};
 
 interface GeoAeoPanelProps {
   initialUrl?: string;
@@ -46,6 +70,7 @@ export function GeoAeoPanel({ initialUrl = "" }: GeoAeoPanelProps) {
   const [shareKey, setShareKey] = React.useState<string | null>(null);
   const [sharing, setSharing] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
+  const [infoOpen, setInfoOpen] = React.useState(false);
 
   React.useEffect(() => {
     const stored = getStoredModel();
@@ -161,7 +186,7 @@ export function GeoAeoPanel({ initialUrl = "" }: GeoAeoPanelProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
+      <nav className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <div className="flex items-center gap-4">
           <Link
             href="/"
@@ -174,6 +199,7 @@ export function GeoAeoPanel({ initialUrl = "" }: GeoAeoPanelProps) {
           <div className="flex items-center gap-1.5">
             <Brain size={13} weight="fill" className="text-primary" />
             <span className="font-mono text-xs font-semibold">GEO &amp; AEO Analyzer</span>
+            <InfoButton onClick={() => setInfoOpen(true)} />
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -186,6 +212,8 @@ export function GeoAeoPanel({ initialUrl = "" }: GeoAeoPanelProps) {
           <ModelSelector onModelChange={setModel} />
         </div>
       </nav>
+
+      <ToolInfoDrawer open={infoOpen} onClose={() => setInfoOpen(false)} {...GEO_AEO_INFO} />
 
       <main className="flex flex-1 flex-col items-center px-6 py-10">
         <div className="w-full max-w-4xl">

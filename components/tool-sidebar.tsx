@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSidebar } from "@/components/sidebar-context";
 import {
   Brain,
   Buildings,
@@ -15,6 +16,7 @@ import {
   Notebook,
   Sparkle,
   Sword,
+  TextAlignLeft,
 } from "@phosphor-icons/react";
 
 const TOOLS = [
@@ -66,25 +68,29 @@ const TOOLS = [
     href: "/google-indexing",
     icon: GoogleLogo,
   },
+  {
+    key: "prompt-analyzer",
+    label: "Prompt Analyzer",
+    href: "/prompt-analyzer",
+    icon: TextAlignLeft,
+  },
 ] as const;
 
 export function ToolSidebar() {
   const pathname = usePathname();
-  const [expanded, setExpanded] = React.useState(false);
+  const { expanded, setExpanded } = useSidebar();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
     const stored = localStorage.getItem("sidebar-expanded");
     if (stored === "true") setExpanded(true);
-  }, []);
+  }, [setExpanded]);
 
   function toggle() {
-    setExpanded((prev) => {
-      const next = !prev;
-      localStorage.setItem("sidebar-expanded", String(next));
-      return next;
-    });
+    const next = !expanded;
+    localStorage.setItem("sidebar-expanded", String(next));
+    setExpanded(next);
   }
 
   // Avoid layout shift on SSR

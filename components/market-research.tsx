@@ -24,6 +24,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { HistoryPanel, SaveToHistoryButton } from "@/components/history-panel";
+import { InfoButton, ToolInfoDrawer } from "@/components/tool-info-drawer";
+
+const MARKET_INFO = {
+  toolName: "Market Research",
+  tagline: "Enter a company name or market topic and get a clear snapshot of where things stand — trends, competition, recent news, and where opportunities or risks exist.",
+  sections: [
+    {
+      title: "What's trending in your market",
+      body: "The topics, technologies, and shifts currently driving your space, so you can speak to what your audience actually cares about right now.",
+    },
+    {
+      title: "Who you're up against",
+      body: "Key players in the market, what they're known for, and how they position themselves — so you can spot gaps and avoid stepping on what's already crowded.",
+    },
+    {
+      title: "Recent news worth knowing",
+      body: "What's happened lately — launches, funding, partnerships, or market shifts that could affect how you position, price, or pitch.",
+    },
+    {
+      title: "Opportunities and risks",
+      body: "Where there's open space to grow, and where there are headwinds or threats worth keeping an eye on before you make a move.",
+    },
+  ],
+};
 
 interface MarketSnapshot {
   url: string;
@@ -43,6 +67,7 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [historyRefresh, setHistoryRefresh] = React.useState(0);
+  const [infoOpen, setInfoOpen] = React.useState(false);
 
   React.useEffect(() => {
     const stored = getStoredModel();
@@ -108,7 +133,7 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <nav className="flex items-center justify-between border-b border-border px-6 py-4">
+      <nav className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <div className="flex items-center gap-4">
           <Link
             href="/"
@@ -121,6 +146,7 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
           <div className="flex items-center gap-1.5">
             <MagnifyingGlass size={13} weight="fill" className="text-primary" />
             <span className="font-mono text-xs font-semibold">Market Research</span>
+            <InfoButton onClick={() => setInfoOpen(true)} />
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -138,6 +164,8 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
           <ModelSelector onModelChange={setModel} />
         </div>
       </nav>
+
+      <ToolInfoDrawer open={infoOpen} onClose={() => setInfoOpen(false)} {...MARKET_INFO} />
 
       <main className="flex flex-1 flex-col items-center px-6 py-10">
         <div className="w-full max-w-6xl space-y-8">

@@ -225,3 +225,51 @@ export interface GeoAeoAudit {
   geoRecommendations: string[];
   aeoRecommendations: string[];
 }
+
+export type PromptGrade = "A" | "B" | "C" | "D" | "F";
+export type PromptLikelihood = "High" | "Medium" | "Low";
+export type PromptCategory =
+  | "Informational"
+  | "Commercial"
+  | "Navigational"
+  | "Transactional"
+  | "Investigational";
+
+export type ContentCheckKey =
+  | "semanticHtml"
+  | "semanticCoverage"
+  | "atomicSections"
+  | "examplesAndFaqs"
+  | "internalLinking";
+
+export interface ContentCheck {
+  key: ContentCheckKey;
+  label: string;
+  grade: PromptGrade;
+  score: number;
+  verdict: string;
+  suggestions: string[];
+}
+
+export interface PromptResult {
+  prompt: string;
+  grade: PromptGrade;
+  score: number;
+  likelihood: PromptLikelihood;
+  category: PromptCategory;
+  reasoning: string;
+  suggestions: string[];
+}
+
+export interface PromptAnalysis {
+  url: string;
+  pageTitle: string;
+  overallScore: number;
+  overallGrade: PromptGrade;
+  aiVisibilityVerdict: string;
+  prompts: PromptResult[];
+  topStrengths: string[];
+  criticalGaps: string[];
+  searchQueries?: string[];
+  contentChecks?: ContentCheck[];
+}
