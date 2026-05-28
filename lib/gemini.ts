@@ -14,7 +14,8 @@ async function loadDbKeys(): Promise<void> {
   if (Date.now() - dbKeysLoadedAt < DB_KEYS_TTL_MS) return;
   try {
     await ensureSchema();
-    const rows = await sql`SELECT gemini_key, firecrawl_key FROM api_keys WHERE id = 1`;
+    const rows =
+      await sql`SELECT gemini_key, firecrawl_key FROM api_keys WHERE id = 1`;
     const row = rows[0];
     cachedDbGeminiKey = (row?.gemini_key as string) || null;
     cachedDbFirecrawlKey = (row?.firecrawl_key as string) || null;
@@ -39,7 +40,9 @@ export async function getGeminiApiKey(override?: string): Promise<string> {
   throw new Error("GEMINI_API_KEY is not configured");
 }
 
-export async function getFirecrawlApiKeyFromDbOrEnv(override?: string): Promise<string | null> {
+export async function getFirecrawlApiKeyFromDbOrEnv(
+  override?: string,
+): Promise<string | null> {
   const trimmed = override?.trim();
   if (trimmed) return trimmed;
 
@@ -61,7 +64,7 @@ export async function generateGeminiText(
   model: string,
   prompt: string,
   key: string | undefined,
-  generationConfig: GeminiGenerationConfig
+  generationConfig: GeminiGenerationConfig,
 ): Promise<string> {
   const modelId = model.replace("models/", "");
   const res = await fetch(
@@ -73,7 +76,7 @@ export async function generateGeminiText(
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig,
       }),
-    }
+    },
   );
 
   if (!res.ok) {
@@ -95,29 +98,19 @@ export interface GeminiSearchResult {
  * Gemini will automatically run Google searches to ground its response
  * in real, current web data before answering.
  *
- * Gemini 2.x uses the `google_search` tool.
- * Gemini 1.5 uses `google_search_retrieval` with dynamic retrieval.
+ * Note: `google_search_retrieval` has been deprecated by Google.
+ * All models now use the `google_search` tool exclusively.
  */
 export async function generateGeminiTextWithSearch(
   model: string,
   prompt: string,
   key: string | undefined,
-  generationConfig: GeminiGenerationConfig
+  generationConfig: GeminiGenerationConfig,
 ): Promise<GeminiSearchResult> {
   const modelId = model.replace("models/", "");
 
-  // Gemini 2.x+ uses google_search; 1.5 uses google_search_retrieval
-  const isGemini2 = /gemini-2|gemini-exp|gemini-pro-exp/.test(modelId);
-  const searchTool = isGemini2
-    ? { google_search: {} }
-    : {
-        google_search_retrieval: {
-          dynamic_retrieval_config: {
-            mode: "MODE_DYNAMIC",
-            dynamic_threshold: 0.3,
-          },
-        },
-      };
+  // All Gemini models now use the unified google_search tool
+  const searchTool = { google_search: {} };
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${key}`,
@@ -129,7 +122,7 @@ export async function generateGeminiTextWithSearch(
         tools: [searchTool],
         generationConfig,
       }),
-    }
+    },
   );
 
   if (!res.ok) {
