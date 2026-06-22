@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ChartBar,
+  ChartLineUp,
   CircleNotch,
   Fire,
   Globe,
@@ -14,12 +15,18 @@ import {
   Newspaper,
   ShieldWarning,
   Sparkle,
+  Star,
+  Sword,
   Target,
   TrendUp,
+  User,
 } from "@phosphor-icons/react";
 import { MarketResearchReport } from "@/lib/types";
 import { getStoredModel, ModelSelector } from "@/components/model-selector";
-import { ApiKeyManager, getStoredGeminiKey } from "@/components/api-key-manager";
+import {
+  ApiKeyManager,
+  getStoredGeminiKey,
+} from "@/components/api-key-manager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,7 +35,8 @@ import { InfoButton, ToolInfoDrawer } from "@/components/tool-info-drawer";
 
 const MARKET_INFO = {
   toolName: "Market Research",
-  tagline: "Enter a company name or market topic and get a clear snapshot of where things stand — trends, competition, recent news, and where opportunities or risks exist.",
+  tagline:
+    "Enter a company name or market topic and get a clear snapshot of where things stand — trends, competition, recent news, and where opportunities or risks exist.",
   sections: [
     {
       title: "What's trending in your market",
@@ -145,7 +153,9 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
           <span className="text-border">|</span>
           <div className="flex items-center gap-1.5">
             <MagnifyingGlass size={13} weight="fill" className="text-primary" />
-            <span className="font-mono text-xs font-semibold">Market Research</span>
+            <span className="font-mono text-xs font-semibold">
+              Market Research
+            </span>
             <InfoButton onClick={() => setInfoOpen(true)} />
           </div>
         </div>
@@ -165,24 +175,34 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
         </div>
       </nav>
 
-      <ToolInfoDrawer open={infoOpen} onClose={() => setInfoOpen(false)} {...MARKET_INFO} />
+      <ToolInfoDrawer
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
+        {...MARKET_INFO}
+      />
 
       <main className="flex flex-1 flex-col items-center px-6 py-10">
         <div className="w-full max-w-6xl space-y-8">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
             <section className="border border-border p-5">
               <div className="mb-5 space-y-2">
-                <h1 className="font-mono text-xl font-bold tracking-tight">Market Research</h1>
+                <h1 className="font-mono text-xl font-bold tracking-tight">
+                  Market Research
+                </h1>
                 <p className="font-mono text-xs leading-relaxed text-muted-foreground">
-                  Enter a company website. AI scrapes the homepage, searches the web for current
-                  market intelligence, and synthesizes a full market research report — trends,
-                  competitors, news, and opportunities.
+                  Enter a company website. AI scrapes the homepage, searches the
+                  web for current market intelligence, and synthesizes a full
+                  market research report — trends, competitors, news, and
+                  opportunities.
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="market-url" className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                  <Label
+                    htmlFor="market-url"
+                    className="font-mono text-xs uppercase tracking-widest text-muted-foreground"
+                  >
                     Company Website
                   </Label>
                   <Input
@@ -197,7 +217,10 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="market-industry" className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                  <Label
+                    htmlFor="market-industry"
+                    className="font-mono text-xs uppercase tracking-widest text-muted-foreground"
+                  >
                     Industry / Business Type (optional)
                   </Label>
                   <Input
@@ -257,7 +280,11 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
                     tool="market-research"
                     buildPayload={() => ({
                       label: `${report.companyName || url.trim()}${industry.trim() ? ` \u2014 ${industry.trim()}` : ""}`,
-                      payload: { url: url.trim(), industry: industry.trim(), report },
+                      payload: {
+                        url: url.trim(),
+                        industry: industry.trim(),
+                        report,
+                      },
                     })}
                     onSaved={() => setHistoryRefresh((n) => n + 1)}
                   />
@@ -293,8 +320,14 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
                         </h3>
                         <ul className="space-y-1.5">
                           {report.trends.map((trend, i) => (
-                            <li key={i} className="flex items-start gap-2 font-mono text-xs leading-relaxed text-foreground">
-                              <ArrowRight size={10} className="mt-1 shrink-0 text-primary" />
+                            <li
+                              key={i}
+                              className="flex items-start gap-2 font-mono text-xs leading-relaxed text-foreground"
+                            >
+                              <ArrowRight
+                                size={10}
+                                className="mt-1 shrink-0 text-primary"
+                              />
                               {trend}
                             </li>
                           ))}
@@ -310,8 +343,14 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
                         </h3>
                         <ul className="space-y-1.5">
                           {report.competitorInsights.map((insight, i) => (
-                            <li key={i} className="flex items-start gap-2 font-mono text-xs leading-relaxed text-foreground">
-                              <ArrowRight size={10} className="mt-1 shrink-0 text-primary" />
+                            <li
+                              key={i}
+                              className="flex items-start gap-2 font-mono text-xs leading-relaxed text-foreground"
+                            >
+                              <ArrowRight
+                                size={10}
+                                className="mt-1 shrink-0 text-primary"
+                              />
                               {insight}
                             </li>
                           ))}
@@ -327,8 +366,14 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
                         </h3>
                         <ul className="space-y-1.5">
                           {report.recentNews.map((news, i) => (
-                            <li key={i} className="flex items-start gap-2 font-mono text-xs leading-relaxed text-foreground">
-                              <ArrowRight size={10} className="mt-1 shrink-0 text-primary" />
+                            <li
+                              key={i}
+                              className="flex items-start gap-2 font-mono text-xs leading-relaxed text-foreground"
+                            >
+                              <ArrowRight
+                                size={10}
+                                className="mt-1 shrink-0 text-primary"
+                              />
                               {news}
                             </li>
                           ))}
@@ -344,8 +389,14 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
                         </h3>
                         <ul className="space-y-1.5">
                           {report.opportunities.map((opportunity, i) => (
-                            <li key={i} className="flex items-start gap-2 font-mono text-xs leading-relaxed text-foreground">
-                              <ArrowRight size={10} className="mt-1 shrink-0 text-primary" />
+                            <li
+                              key={i}
+                              className="flex items-start gap-2 font-mono text-xs leading-relaxed text-foreground"
+                            >
+                              <ArrowRight
+                                size={10}
+                                className="mt-1 shrink-0 text-primary"
+                              />
                               {opportunity}
                             </li>
                           ))}
@@ -361,12 +412,204 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
                         </h3>
                         <ul className="space-y-1.5">
                           {report.risks.map((risk, i) => (
-                            <li key={i} className="flex items-start gap-2 font-mono text-xs leading-relaxed text-foreground">
-                              <ArrowRight size={10} className="mt-1 shrink-0 text-destructive" />
+                            <li
+                              key={i}
+                              className="flex items-start gap-2 font-mono text-xs leading-relaxed text-foreground"
+                            >
+                              <ArrowRight
+                                size={10}
+                                className="mt-1 shrink-0 text-destructive"
+                              />
                               {risk}
                             </li>
                           ))}
                         </ul>
+                      </div>
+                    )}
+
+                    {/* Similar Companies */}
+                    {report.similarCompanies &&
+                      report.similarCompanies.length > 0 && (
+                        <div>
+                          <h3 className="mb-3 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                            <Sword size={12} className="text-primary" />
+                            Similar Companies &amp; Competitors
+                          </h3>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {report.similarCompanies.map((comp, i) => (
+                              <div key={i} className="border border-border p-3">
+                                <p className="font-mono text-xs font-semibold text-foreground">
+                                  {comp.name}
+                                </p>
+                                {comp.website && (
+                                  <a
+                                    href={comp.website}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block truncate font-mono text-[10px] text-primary hover:underline"
+                                  >
+                                    {comp.website}
+                                  </a>
+                                )}
+                                <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                                  {comp.description}
+                                </p>
+                                <div className="mt-2 grid grid-cols-2 gap-2">
+                                  <div className="rounded bg-green-500/10 px-2 py-1">
+                                    <span className="font-mono text-[9px] uppercase tracking-wider text-green-600">
+                                      Google
+                                    </span>
+                                    <p className="font-mono text-xs font-bold text-green-600">
+                                      {comp.googleVisibility}%
+                                    </p>
+                                  </div>
+                                  <div className="rounded bg-blue-500/10 px-2 py-1">
+                                    <span className="font-mono text-[9px] uppercase tracking-wider text-blue-600">
+                                      Users
+                                    </span>
+                                    <p className="font-mono text-xs font-bold text-blue-600">
+                                      {comp.userPreference}%
+                                    </p>
+                                  </div>
+                                </div>
+                                <p className="mt-1 font-mono text-[10px] italic text-muted-foreground">
+                                  {comp.positioning}
+                                </p>
+                                {comp.strengths.length > 0 && (
+                                  <div className="mt-2 flex flex-wrap gap-1">
+                                    {comp.strengths.map((s, j) => (
+                                      <span
+                                        key={j}
+                                        className="rounded bg-green-500/10 px-1.5 py-0.5 font-mono text-[9px] text-green-700"
+                                      >
+                                        + {s}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Market Visibility Comparison */}
+                    {report.marketVisibility &&
+                      report.marketVisibility.length > 0 && (
+                        <div>
+                          <h3 className="mb-3 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                            <ChartLineUp size={12} className="text-primary" />
+                            Market Visibility Comparison
+                          </h3>
+                          <div className="overflow-x-auto">
+                            <table className="w-full border-collapse">
+                              <thead>
+                                <tr className="border-b border-border">
+                                  <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                                    Competitor
+                                  </th>
+                                  <th className="px-3 py-2 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                                    Google Ranking
+                                  </th>
+                                  <th className="px-3 py-2 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                                    User Trust
+                                  </th>
+                                  <th className="px-3 py-2 text-center font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                                    Content Quality
+                                  </th>
+                                  <th className="px-3 py-2 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                                    Key Difference
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {report.marketVisibility.map((row, i) => (
+                                  <tr
+                                    key={i}
+                                    className="border-b border-border last:border-0"
+                                  >
+                                    <td className="px-3 py-2.5 font-mono text-xs font-semibold text-foreground">
+                                      {row.competitor}
+                                    </td>
+                                    <td className="px-3 py-2.5 text-center">
+                                      <Badge type={row.googleRanking} />
+                                    </td>
+                                    <td className="px-3 py-2.5 text-center">
+                                      <Badge type={row.userTrust} />
+                                    </td>
+                                    <td className="px-3 py-2.5 text-center">
+                                      <Badge type={row.contentQuality} />
+                                    </td>
+                                    <td className="px-3 py-2.5 font-mono text-[10px] text-muted-foreground">
+                                      {row.keyDifference}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Google vs User Favored Factors */}
+                    {(report.googleFavoredFactors?.length ?? 0) > 0 ||
+                    (report.userFavoredFactors?.length ?? 0) > 0 ? (
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {(report.googleFavoredFactors?.length ?? 0) > 0 && (
+                          <div className="border border-border p-4">
+                            <h3 className="mb-2 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                              <Globe size={12} className="text-primary" />
+                              Favored by Google
+                            </h3>
+                            <ul className="space-y-1">
+                              {report.googleFavoredFactors!.map((f, i) => (
+                                <li
+                                  key={i}
+                                  className="flex items-start gap-2 font-mono text-[10px] leading-relaxed text-foreground"
+                                >
+                                  <span className="mt-0.5 text-green-500">
+                                    ✓
+                                  </span>
+                                  {f}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {(report.userFavoredFactors?.length ?? 0) > 0 && (
+                          <div className="border border-border p-4">
+                            <h3 className="mb-2 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                              <Star size={12} className="text-primary" />
+                              Favored by Users / Clients
+                            </h3>
+                            <ul className="space-y-1">
+                              {report.userFavoredFactors!.map((f, i) => (
+                                <li
+                                  key={i}
+                                  className="flex items-start gap-2 font-mono text-[10px] leading-relaxed text-foreground"
+                                >
+                                  <span className="mt-0.5 text-blue-500">
+                                    ✓
+                                  </span>
+                                  {f}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {/* Overall Positioning */}
+                    {report.overallPositioning && (
+                      <div className="rounded border border-primary/30 bg-primary/5 p-4">
+                        <h3 className="mb-1 flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-widest text-primary">
+                          <Target size={12} />
+                          Overall Positioning
+                        </h3>
+                        <p className="font-mono text-xs leading-relaxed text-foreground">
+                          {report.overallPositioning}
+                        </p>
                       </div>
                     )}
 
@@ -400,5 +643,33 @@ export function MarketResearch({ initialUrl = "" }: MarketResearchProps) {
         </div>
       </main>
     </div>
+  );
+}
+
+function Badge({ type }: { type: string }) {
+  const colorClass =
+    type === "stronger" || type === "better"
+      ? "bg-green-500/10 text-green-600 border-green-500/30"
+      : type === "weaker" || type === "worse"
+        ? "bg-red-500/10 text-red-500 border-red-500/30"
+        : "bg-yellow-500/10 text-yellow-600 border-yellow-500/30";
+
+  const label =
+    type === "stronger"
+      ? "Stronger"
+      : type === "weaker"
+        ? "Weaker"
+        : type === "better"
+          ? "Better"
+          : type === "worse"
+            ? "Worse"
+            : "Similar";
+
+  return (
+    <span
+      className={`inline-block rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${colorClass}`}
+    >
+      {label}
+    </span>
   );
 }

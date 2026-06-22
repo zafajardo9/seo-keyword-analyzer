@@ -168,6 +168,25 @@ export interface CompanyDiscoveryRun {
   limit: number;
 }
 
+export interface CompetitorProfile {
+  name: string;
+  website: string;
+  description: string;
+  strengths: string[];
+  weaknesses: string[];
+  googleVisibility: number;
+  userPreference: number;
+  positioning: string;
+}
+
+export interface MarketVisibilityRow {
+  competitor: string;
+  googleRanking: "stronger" | "similar" | "weaker";
+  userTrust: "stronger" | "similar" | "weaker";
+  contentQuality: "better" | "similar" | "worse";
+  keyDifference: string;
+}
+
 export interface MarketResearchReport {
   companyName: string;
   industry: string;
@@ -179,6 +198,12 @@ export interface MarketResearchReport {
   risks: string[];
   confidenceScore: number;
   sources: string[];
+  // Enhanced competitive analysis
+  similarCompanies?: CompetitorProfile[];
+  marketVisibility?: MarketVisibilityRow[];
+  googleFavoredFactors?: string[];
+  userFavoredFactors?: string[];
+  overallPositioning?: string;
 }
 
 export interface GeminiModel {
@@ -357,6 +382,26 @@ export interface SerpResult {
   url: string;
   title: string;
   headings: string[];
+}
+
+// ── Personas & Content Generation ──
+
+export interface Persona {
+  id: string;
+  name: string;
+  description: string;
+  tone: string;
+  audience: string;
+  guidelines: string[];
+  createdAt: string;
+}
+
+export interface GeneratedContent {
+  title: string;
+  metaDescription: string;
+  content: string;
+  personaName: string;
+  topic: string;
 }
 
 // ── SEO Validation ──

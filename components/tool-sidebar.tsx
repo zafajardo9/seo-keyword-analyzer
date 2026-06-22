@@ -15,6 +15,7 @@ import {
   ListBullets,
   ListChecks,
   MagnifyingGlass,
+  NotePencil,
   Notebook,
   Robot,
   Sparkle,
@@ -94,6 +95,18 @@ const TOOLS = [
     label: "SEO Validation",
     href: "/seo-validation",
     icon: ListChecks,
+  },
+  {
+    key: "content-generator",
+    label: "Content Generator",
+    href: "/content-generator",
+    icon: NotePencil,
+  },
+  {
+    key: "web-search",
+    label: "Web Search",
+    href: "/web-search",
+    icon: MagnifyingGlass,
   },
 ] as const;
 

@@ -10,6 +10,7 @@ import {
   ListBullets,
   ListChecks,
   MagnifyingGlass,
+  NotePencil,
   Notebook,
   Robot,
   Sword,
@@ -104,6 +105,18 @@ const TOOL_LINKS = [
       "Pass/fail checklist for titles, headings, links, OG, and schema",
     icon: ListChecks,
   },
+  {
+    key: "contentGenerator",
+    label: "Content Generator",
+    description: "Create personas and generate blog content in their voice",
+    icon: NotePencil,
+  },
+  {
+    key: "webSearch",
+    label: "Web Search",
+    description: "AI-powered search with real-time web results",
+    icon: MagnifyingGlass,
+  },
 ] as const;
 
 export function ToolNavDropdown({
@@ -129,6 +142,8 @@ export function ToolNavDropdown({
     crawlMonitor: crawlMonitorHref,
     contentOutline: "/content-outline",
     seoValidation: "/seo-validation",
+    contentGenerator: "/content-generator",
+    webSearch: "/web-search",
   };
 
   return (

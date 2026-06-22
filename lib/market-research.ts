@@ -3,8 +3,13 @@ import {
   clampScore,
   getGeminiApiKey,
   parseJsonSafely,
+  generateGeminiTextWithSearch,
 } from "@/lib/gemini";
-import { MarketResearchReport } from "@/lib/types";
+import {
+  MarketResearchReport,
+  CompetitorProfile,
+  MarketVisibilityRow,
+} from "@/lib/types";
 
 const MAX_SEARCHES = 5;
 
@@ -90,7 +95,11 @@ async function scrapeHomepage(url: string): Promise<{
       if (text) h1.push(text);
     });
 
-    const bodyText = $("body").text().replace(/\s+/g, " ").trim().slice(0, 2000);
+    const bodyText = $("body")
+      .text()
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 2000);
 
     return { title, description, h1, bodyText };
   } catch {
@@ -204,7 +213,9 @@ export async function conductMarketResearch(
   const searchResults: SearchResult[] = [];
   const allQueries: string[] = [];
 
-  const industryContext = industry ? `Known industry/business type: ${industry}\n` : "";
+  const industryContext = industry
+    ? `Known industry/business type: ${industry}\n`
+    : "";
 
   const prompt = `You are an expert market research analyst. Your task is to research the market landscape for a given company website.
 
@@ -267,7 +278,11 @@ Return ONLY valid JSON matching this exact structure:
       allQueries.push(query);
       const results = await searchWeb(query);
       searchResults.push(...results);
-      return results.map((r) => ({ title: r.title, url: r.url, snippet: r.snippet }));
+      return results.map((r) => ({
+        title: r.title,
+        url: r.url,
+        snippet: r.snippet,
+      }));
     },
   );
 
@@ -276,19 +291,113 @@ Return ONLY valid JSON matching this exact structure:
     ({} as Partial<MarketResearchReport>);
 
   const sources = Array.from(
-    new Set([
-      ...(report.sources ?? []),
-      ...searchResults.map((r) => r.url),
-    ]),
+    new Set([...(report.sources ?? []), ...searchResults.map((r) => r.url)]),
   );
+
+  // Phase 2: Deep competitive analysis using Google Search grounding
+  let similarCompanies: CompetitorProfile[] = [];
+  let marketVisibility: MarketVisibilityRow[] = [];
+  let googleFavoredFactors: string[] = [];
+  let userFavoredFactors: string[] = [];
+  let overallPositioning = "";
+
+  try {
+    const compPrompt = `You are an expert competitive analyst with access to Google Search. Research the competitive landscape for the company below.
+
+Company: ${report.companyName || companyName}
+Industry: ${report.industry || "Unknown"}
+Website: ${root.hostname}
+
+Search Google for similar companies, competitors, and market positioning. Then return ONLY valid JSON using this exact structure:
+{
+  "similarCompanies": [
+    {
+      "name": "Competitor name",
+      "website": "https://...",
+      "description": "Brief description of their offering",
+      "strengths": ["strength 1", "strength 2", "strength 3"],
+      "weaknesses": ["weakness 1", "weakness 2"],
+      "googleVisibility": 75,
+      "userPreference": 65,
+      "positioning": "How they position themselves in the market"
+    }
+  ],
+  "marketVisibility": [
+    {
+      "competitor": "Competitor name",
+      "googleRanking": "stronger | similar | weaker",
+      "userTrust": "stronger | similar | weaker",
+      "contentQuality": "better | similar | worse",
+      "keyDifference": "What sets them apart from the target company"
+    }
+  ],
+  "googleFavoredFactors": ["What Google seems to favor about top competitors"],
+  "userFavoredFactors": ["What users/clients seem to prefer"],
+  "overallPositioning": "1-2 sentence summary of where the company stands vs competitors"
+}
+
+Requirements:
+- Find 3-5 similar companies / direct competitors
+- googleVisibility: 0-100 score estimating how well they rank in Google search
+- userPreference: 0-100 score estimating user/client preference
+- Use real search data to inform your analysis, not generic assumptions
+- Be specific about each competitor's positioning and key differences`;
+
+    const { text: compText } = await generateGeminiTextWithSearch(
+      modelId,
+      compPrompt,
+      key,
+      { temperature: 0.4, maxOutputTokens: 4096 },
+    );
+
+    const compData = parseJsonSafely<{
+      similarCompanies: CompetitorProfile[];
+      marketVisibility: MarketVisibilityRow[];
+      googleFavoredFactors: string[];
+      userFavoredFactors: string[];
+      overallPositioning: string;
+    }>(compText);
+
+    if (compData) {
+      if (Array.isArray(compData.similarCompanies)) {
+        similarCompanies = compData.similarCompanies.filter(
+          (c) => c.name && c.name.length > 0,
+        );
+      }
+      if (Array.isArray(compData.marketVisibility)) {
+        marketVisibility = compData.marketVisibility.filter(
+          (r) => r.competitor && r.competitor.length > 0,
+        );
+      }
+      googleFavoredFactors = Array.isArray(compData.googleFavoredFactors)
+        ? compData.googleFavoredFactors.filter(
+            (f): f is string => typeof f === "string",
+          )
+        : [];
+      userFavoredFactors = Array.isArray(compData.userFavoredFactors)
+        ? compData.userFavoredFactors.filter(
+            (f): f is string => typeof f === "string",
+          )
+        : [];
+      overallPositioning = String(compData.overallPositioning ?? "");
+    }
+  } catch {
+    // Competitive analysis failed silently — report still works without it
+  }
 
   return {
     companyName: String(report.companyName ?? companyName),
     industry: String(report.industry ?? "Unknown Industry"),
-    summary: String(report.summary ?? homepage.description ?? "No summary available."),
-    trends: Array.isArray(report.trends) ? report.trends.filter((t): t is string => typeof t === "string") : [],
+    summary: String(
+      report.summary ?? homepage.description ?? "No summary available.",
+    ),
+    trends: Array.isArray(report.trends)
+      ? report.trends.filter((t): t is string => typeof t === "string")
+      : [],
     competitorInsights: Array.isArray(report.competitorInsights)
-      ? report.competitorInsights.filter((i): i is string => typeof i === "string")
+      ? report.competitorInsights.filter(
+          (i): i is string => typeof i === "string",
+        )
       : [],
     recentNews: Array.isArray(report.recentNews)
       ? report.recentNews.filter((n): n is string => typeof n === "string")
@@ -301,5 +410,10 @@ Return ONLY valid JSON matching this exact structure:
       : [],
     confidenceScore: clampScore(report.confidenceScore ?? 50),
     sources: sources.slice(0, 20),
+    similarCompanies,
+    marketVisibility,
+    googleFavoredFactors,
+    userFavoredFactors,
+    overallPositioning,
   };
 }

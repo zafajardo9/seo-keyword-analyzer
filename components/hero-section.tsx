@@ -10,19 +10,24 @@ import {
   ArrowRight,
   Brain,
   Buildings,
+  ChartLineUp,
   GoogleLogo,
   Lightning,
   ListBullets,
   ListChecks,
   MagnifyingGlass,
+  NotePencil,
   Notebook,
   Robot,
+  SignOut,
   Sparkle,
   Sword,
   TextAlignLeft,
+  X,
 } from "@phosphor-icons/react";
 import { ModelSelector } from "@/components/model-selector";
 import { ApiKeyManager, hasAnyKey } from "@/components/api-key-manager";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(TextPlugin);
@@ -41,6 +46,7 @@ export function HeroSection() {
   const bgRef = React.useRef<HTMLDivElement>(null);
   const [model, setModel] = React.useState("");
   const [hasKey, setHasKey] = React.useState(false);
+  const [toolsOpen, setToolsOpen] = React.useState(false);
 
   React.useEffect(() => {
     setHasKey(hasAnyKey());
@@ -116,6 +122,7 @@ export function HeroSection() {
           initial={{ opacity: 0, x: 12 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
+          className="flex items-center gap-3"
         >
           <Link
             href="/analyze"
@@ -124,6 +131,18 @@ export function HeroSection() {
             Launch App →
           </Link>
           <ApiKeyManager onChange={() => setHasKey(hasAnyKey())} />
+          <button
+            type="button"
+            onClick={async () => {
+              await fetch("/api/auth/logout", { method: "POST" });
+              window.location.href = "/login";
+            }}
+            className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground transition-colors hover:text-destructive"
+            title="Sign out"
+          >
+            <SignOut size={12} />
+            <span className="hidden sm:inline">Sign out</span>
+          </button>
         </motion.div>
       </nav>
 
@@ -145,13 +164,15 @@ export function HeroSection() {
               Powered by Gemini AI
             </motion.span>
 
-            <h1 className="max-w-2xl font-mono text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl">
-              <span ref={headlineRef} />
-              <span
-                ref={cursorRef}
-                className="inline-block w-0.5 bg-primary text-primary"
-              >
-                |
+            <h1 className="flex min-h-[3.5rem] items-center justify-center font-mono text-4xl font-bold leading-tight tracking-tight text-foreground sm:min-h-[4.5rem] sm:text-5xl md:min-h-[5.5rem] md:text-6xl">
+              <span className="inline-flex items-center">
+                <span ref={headlineRef} />
+                <span
+                  ref={cursorRef}
+                  className="inline-block w-0.5 bg-primary text-primary"
+                >
+                  |
+                </span>
               </span>
             </h1>
           </div>
@@ -175,106 +196,6 @@ export function HeroSection() {
           >
             <ModelSelector onModelChange={setModel} />
 
-            <div className="flex w-full max-w-2xl flex-col items-center gap-3">
-              {/* Primary CTA */}
-              <Link
-                href="/analyze"
-                className={cn(
-                  "flex items-center gap-2 border border-primary bg-primary px-6 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:scale-95",
-                  !model && !hasKey && "pointer-events-none opacity-50",
-                )}
-              >
-                Start Analyzing
-                <ArrowRight size={13} />
-              </Link>
-
-              {/* Tools grid */}
-              <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3">
-                {[
-                  {
-                    href: "/relevance",
-                    label: "Relevance Checker",
-                    icon: <Notebook size={13} />,
-                    needsKey: true,
-                  },
-                  {
-                    href: "/battle",
-                    label: "Battle of Blogs",
-                    icon: <Sword size={13} />,
-                    needsKey: true,
-                  },
-                  {
-                    href: "/company-research",
-                    label: "Company Research",
-                    icon: <Buildings size={13} />,
-                    needsKey: true,
-                  },
-                  {
-                    href: "/market-research",
-                    label: "Market Research",
-                    icon: <MagnifyingGlass size={13} />,
-                    needsKey: true,
-                  },
-                  {
-                    href: "/indexnow",
-                    label: "IndexNow Submit",
-                    icon: <Lightning size={13} />,
-                    needsKey: false,
-                  },
-                  {
-                    href: "/geo-aeo",
-                    label: "GEO & AEO",
-                    icon: <Brain size={13} />,
-                    needsKey: true,
-                  },
-                  {
-                    href: "/google-indexing",
-                    label: "Google Indexing",
-                    icon: <GoogleLogo size={13} weight="bold" />,
-                    needsKey: false,
-                  },
-                  {
-                    href: "/prompt-analyzer",
-                    label: "Prompt Analyzer",
-                    icon: <TextAlignLeft size={13} />,
-                    needsKey: true,
-                  },
-                  {
-                    href: "/crawl-monitor",
-                    label: "AI Crawl Monitor",
-                    icon: <Robot size={13} />,
-                    needsKey: false,
-                  },
-                  {
-                    href: "/content-outline",
-                    label: "Content Outline",
-                    icon: <ListBullets size={13} />,
-                    needsKey: true,
-                  },
-                  {
-                    href: "/seo-validation",
-                    label: "SEO Validation",
-                    icon: <ListChecks size={13} />,
-                    needsKey: true,
-                  },
-                ].map((tool) => (
-                  <Link
-                    key={tool.href}
-                    href={tool.href}
-                    className={cn(
-                      "flex items-center justify-between gap-2 border border-border px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                      tool.needsKey &&
-                        !model &&
-                        !hasKey &&
-                        "pointer-events-none opacity-50",
-                    )}
-                  >
-                    <span className="truncate">{tool.label}</span>
-                    <span className="shrink-0">{tool.icon}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
             {!model && !hasKey && (
               <span className="font-mono text-[10px] text-muted-foreground">
                 Select a model or provide an API key to continue
@@ -283,86 +204,200 @@ export function HeroSection() {
           </motion.div>
         </motion.div>
 
+        {/* Bottom CTA buttons */}
         <motion.div
-          initial={{ opacity: 0, y: 32 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.8 }}
-          className="mt-24 grid max-w-5xl grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          transition={{ duration: 0.5, delay: 0.8 }}
+          className="mt-16 flex items-center gap-4"
         >
-          {FEATURES.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.9 + i * 0.1 }}
-              className="flex flex-col gap-2 border border-border p-4"
-            >
-              <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-primary">
-                {f.tag}
-              </span>
-              <h3 className="font-mono text-sm font-semibold text-foreground">
-                {f.title}
-              </h3>
-              <p className="font-mono text-xs leading-relaxed text-muted-foreground">
-                {f.desc}
-              </p>
-            </motion.div>
-          ))}
+          <Link
+            href="/analyze"
+            className={cn(
+              "flex items-center gap-2 border border-primary bg-primary px-8 py-3 font-mono text-xs font-semibold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary/90 active:scale-95",
+              !model && !hasKey && "pointer-events-none opacity-50",
+            )}
+          >
+            Start Analyzing
+            <ArrowRight size={14} />
+          </Link>
+          <button
+            type="button"
+            onClick={() => setToolsOpen(true)}
+            className="flex items-center gap-2 border border-border px-8 py-3 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-all hover:border-primary hover:text-primary active:scale-95"
+          >
+            <ListBullets size={14} />
+            View Tools
+          </button>
         </motion.div>
       </main>
+
+      {/* Tools Dialog */}
+      {toolsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setToolsOpen(false)}
+          />
+          <div className="relative flex max-h-[85vh] w-full max-w-5xl flex-col overflow-hidden border border-border bg-background shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+              <div className="flex items-center gap-2">
+                <Sparkle size={14} weight="fill" className="text-primary" />
+                <span className="font-mono text-sm font-semibold">
+                  All Tools
+                </span>
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  {TOOLS.length} tools
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setToolsOpen(false)}
+                className="text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Grid */}
+            <div className="flex-1 overflow-y-auto px-6 py-5">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {TOOLS.map((tool) => {
+                  const Icon = tool.icon;
+                  return (
+                    <Link
+                      key={tool.href}
+                      href={tool.href}
+                      onClick={() => setToolsOpen(false)}
+                      className="group flex flex-col gap-2 border border-border p-4 transition-colors hover:border-primary hover:bg-primary/5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-7 w-7 items-center justify-center rounded bg-primary/10">
+                          <Icon size={13} className="text-primary" />
+                        </span>
+                        <span className="font-mono text-xs font-semibold text-foreground group-hover:text-primary">
+                          {tool.label}
+                        </span>
+                      </div>
+                      <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+                        {tool.description}
+                      </p>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-const FEATURES = [
+const TOOLS: Array<{
+  href: string;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+}> = [
   {
-    tag: "01 · Scrape",
-    title: "Intelligent Page Parsing",
-    desc: "Extracts headings, meta tags, and body content from any public URL.",
+    href: "/analyze",
+    label: "SEO Analyzer",
+    description:
+      "Audit any URL — extract keywords, page insights, and blog content recommendations in seconds.",
+    icon: ChartLineUp,
   },
   {
-    tag: "02 · Extract",
-    title: "Keyword Discovery",
-    desc: "Gemini AI identifies short-tail and long-tail keywords with clear search intent.",
+    href: "/relevance",
+    label: "Relevance Checker",
+    description:
+      "Check if your content matches search intent with AI-powered relevance scores.",
+    icon: Notebook,
   },
   {
-    tag: "03 · Recommend",
-    title: "Content Strategy",
-    desc: "Get 6 ready-to-use blog recommendations with sample intro paragraphs and target keywords.",
+    href: "/battle",
+    label: "Battle of Blogs",
+    description:
+      "Put two blog pages head-to-head and let AI judge who wins on SEO and content depth.",
+    icon: Sword,
   },
   {
-    tag: "04 · Verify",
-    title: "Relevance Checker",
-    desc: "Paste a draft and a target keyword to see if the content truly matches the intended search intent.",
+    href: "/company-research",
+    label: "Company Research",
+    description:
+      "Crawl competitor websites to collect public contacts, summaries, and outreach fit.",
+    icon: Buildings,
   },
   {
-    tag: "05 · Compare",
-    title: "Battle of Blogs",
-    desc: "Put two blog pages head-to-head and let AI judge who wins on SEO, clarity, and content depth.",
+    href: "/market-research",
+    label: "Market Research",
+    description:
+      "Market trends, competitor insights, and industry news aggregated by AI.",
+    icon: MagnifyingGlass,
   },
   {
-    tag: "06 · Research",
-    title: "Company Research",
-    desc: "Crawl competitor and partner websites to collect public contacts, company summaries, and outreach fit.",
+    href: "/indexnow",
+    label: "IndexNow Submit",
+    description:
+      "Push URLs to search engines instantly via the IndexNow protocol.",
+    icon: Lightning,
   },
   {
-    tag: "07 · Optimize",
-    title: "GEO & AEO Analyzer",
-    desc: "Score how likely your content is to be cited by AI assistants like ChatGPT, Gemini, and Perplexity.",
+    href: "/geo-aeo",
+    label: "GEO & AEO Analyzer",
+    description:
+      "Score your content's likelihood of being cited by AI assistants like ChatGPT and Perplexity.",
+    icon: Brain,
   },
   {
-    tag: "08 · Index",
-    title: "Google Indexing",
-    desc: "Request Google to crawl and re-index specific URLs immediately using the official Indexing API.",
+    href: "/google-indexing",
+    label: "Google Indexing",
+    description:
+      "Request Google to crawl and re-index specific URLs via the official Indexing API.",
+    icon: GoogleLogo,
   },
   {
-    tag: "09 · Predict",
-    title: "Prompt Analyzer",
-    desc: "Discover which AI search prompts would surface your page in Google AI, Perplexity, or ChatGPT — with grades and improvement suggestions.",
+    href: "/prompt-analyzer",
+    label: "Prompt Analyzer",
+    description:
+      "Discover which AI search prompts would surface your page with grades and suggestions.",
+    icon: TextAlignLeft,
   },
   {
-    tag: "10 · Validate",
-    title: "SEO Validation",
-    desc: "Run a structured pass/fail checklist on titles, headings, links, OG tags, and schema before publishing.",
+    href: "/crawl-monitor",
+    label: "AI Crawl Monitor",
+    description:
+      "Track which AI bots are crawling your site with real-time beacon monitoring.",
+    icon: Robot,
+  },
+  {
+    href: "/content-outline",
+    label: "Content Outline",
+    description:
+      "Generate SERP-informed H2/H3 outlines with real competitor analysis and word counts.",
+    icon: ListBullets,
+  },
+  {
+    href: "/seo-validation",
+    label: "SEO Validation",
+    description:
+      "Run a pass/fail checklist on titles, headings, links, OG tags, and schema.",
+    icon: ListChecks,
+  },
+  {
+    href: "/content-generator",
+    label: "Content Generator",
+    description:
+      "Create writing personas and generate full blog posts in their unique voice and style.",
+    icon: NotePencil,
+  },
+  {
+    href: "/web-search",
+    label: "Web Search",
+    description:
+      "Ask any question and get an AI answer grounded in real-time Google Search results.",
+    icon: MagnifyingGlass,
   },
 ];

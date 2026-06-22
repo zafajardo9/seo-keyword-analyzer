@@ -77,6 +77,17 @@ export function ensureSchema(): Promise<void> {
       )
     `;
     await sql`
+      CREATE TABLE IF NOT EXISTS personas (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        tone TEXT NOT NULL,
+        audience TEXT NOT NULL,
+        guidelines JSONB NOT NULL DEFAULT '[]'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    await sql`
       CREATE TABLE IF NOT EXISTS sessions (
         id TEXT PRIMARY KEY,
         payload JSONB NOT NULL,
