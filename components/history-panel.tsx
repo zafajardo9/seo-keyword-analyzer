@@ -19,7 +19,11 @@ export type ToolName =
   | "company-research"
   | "geo-aeo"
   | "google-indexing"
-  | "prompt-analyzer";
+  | "prompt-analyzer"
+  | "content-optimizer"
+  | "content-strategy"
+  | "content-brief"
+  | "seo-validation";
 
 export interface HistoryItem<T = unknown> {
   id: string;
@@ -54,7 +58,9 @@ export function HistoryPanel<T = unknown>({
   const loadItems = React.useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/history?tool=${tool}`, { cache: "no-store" });
+      const res = await fetch(`/api/history?tool=${tool}`, {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Failed to load history");
       const data = await res.json();
       setItems((data?.items ?? []) as HistoryItem<T>[]);
@@ -249,8 +255,7 @@ export function SaveToHistoryButton<T = unknown>({
       onClick={handleSave}
       disabled={disabled || saving}
       className={
-        className ??
-        "gap-1.5 font-mono text-[11px] uppercase tracking-widest"
+        className ?? "gap-1.5 font-mono text-[11px] uppercase tracking-widest"
       }
     >
       {saving ? (

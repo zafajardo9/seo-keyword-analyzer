@@ -77,6 +77,13 @@ export function ensureSchema(): Promise<void> {
       )
     `;
     await sql`
+      CREATE TABLE IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        payload JSONB NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    await sql`
       CREATE TABLE IF NOT EXISTS connected_sites (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,

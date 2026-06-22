@@ -12,6 +12,8 @@ import {
   Buildings,
   GoogleLogo,
   Lightning,
+  ListBullets,
+  ListChecks,
   MagnifyingGlass,
   Notebook,
   Robot,
@@ -189,22 +191,82 @@ export function HeroSection() {
               {/* Tools grid */}
               <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3">
                 {[
-                  { href: "/relevance", label: "Relevance Checker", icon: <Notebook size={13} />, needsKey: true },
-                  { href: "/battle", label: "Battle of Blogs", icon: <Sword size={13} />, needsKey: true },
-                  { href: "/company-research", label: "Company Research", icon: <Buildings size={13} />, needsKey: true },
-                  { href: "/market-research", label: "Market Research", icon: <MagnifyingGlass size={13} />, needsKey: true },
-                  { href: "/indexnow", label: "IndexNow Submit", icon: <Lightning size={13} />, needsKey: false },
-                  { href: "/geo-aeo", label: "GEO & AEO", icon: <Brain size={13} />, needsKey: true },
-                  { href: "/google-indexing", label: "Google Indexing", icon: <GoogleLogo size={13} weight="bold" />, needsKey: false },
-                  { href: "/prompt-analyzer", label: "Prompt Analyzer", icon: <TextAlignLeft size={13} />, needsKey: true },
-                  { href: "/crawl-monitor", label: "AI Crawl Monitor", icon: <Robot size={13} />, needsKey: false },
+                  {
+                    href: "/relevance",
+                    label: "Relevance Checker",
+                    icon: <Notebook size={13} />,
+                    needsKey: true,
+                  },
+                  {
+                    href: "/battle",
+                    label: "Battle of Blogs",
+                    icon: <Sword size={13} />,
+                    needsKey: true,
+                  },
+                  {
+                    href: "/company-research",
+                    label: "Company Research",
+                    icon: <Buildings size={13} />,
+                    needsKey: true,
+                  },
+                  {
+                    href: "/market-research",
+                    label: "Market Research",
+                    icon: <MagnifyingGlass size={13} />,
+                    needsKey: true,
+                  },
+                  {
+                    href: "/indexnow",
+                    label: "IndexNow Submit",
+                    icon: <Lightning size={13} />,
+                    needsKey: false,
+                  },
+                  {
+                    href: "/geo-aeo",
+                    label: "GEO & AEO",
+                    icon: <Brain size={13} />,
+                    needsKey: true,
+                  },
+                  {
+                    href: "/google-indexing",
+                    label: "Google Indexing",
+                    icon: <GoogleLogo size={13} weight="bold" />,
+                    needsKey: false,
+                  },
+                  {
+                    href: "/prompt-analyzer",
+                    label: "Prompt Analyzer",
+                    icon: <TextAlignLeft size={13} />,
+                    needsKey: true,
+                  },
+                  {
+                    href: "/crawl-monitor",
+                    label: "AI Crawl Monitor",
+                    icon: <Robot size={13} />,
+                    needsKey: false,
+                  },
+                  {
+                    href: "/content-outline",
+                    label: "Content Outline",
+                    icon: <ListBullets size={13} />,
+                    needsKey: true,
+                  },
+                  {
+                    href: "/seo-validation",
+                    label: "SEO Validation",
+                    icon: <ListChecks size={13} />,
+                    needsKey: true,
+                  },
                 ].map((tool) => (
                   <Link
                     key={tool.href}
                     href={tool.href}
                     className={cn(
                       "flex items-center justify-between gap-2 border border-border px-4 py-2.5 font-mono text-xs font-semibold uppercase tracking-widest text-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary",
-                      tool.needsKey && !model && !hasKey && "pointer-events-none opacity-50",
+                      tool.needsKey &&
+                        !model &&
+                        !hasKey &&
+                        "pointer-events-none opacity-50",
                     )}
                   >
                     <span className="truncate">{tool.label}</span>
@@ -297,5 +359,10 @@ const FEATURES = [
     tag: "09 · Predict",
     title: "Prompt Analyzer",
     desc: "Discover which AI search prompts would surface your page in Google AI, Perplexity, or ChatGPT — with grades and improvement suggestions.",
+  },
+  {
+    tag: "10 · Validate",
+    title: "SEO Validation",
+    desc: "Run a structured pass/fail checklist on titles, headings, links, OG tags, and schema before publishing.",
   },
 ];

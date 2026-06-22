@@ -7,6 +7,8 @@ import {
   CaretDown,
   ChartLineUp,
   Lightning,
+  ListBullets,
+  ListChecks,
   MagnifyingGlass,
   Notebook,
   Robot,
@@ -30,6 +32,8 @@ interface ToolNavDropdownProps {
   geoAeoHref?: string;
   promptAnalyzerHref?: string;
   crawlMonitorHref?: string;
+  contentOutlineHref?: string;
+  seoValidationHref?: string;
 }
 
 const TOOL_LINKS = [
@@ -87,6 +91,19 @@ const TOOL_LINKS = [
     description: "See which AI bots are crawling your site",
     icon: Robot,
   },
+  {
+    key: "contentOutline",
+    label: "Content Outline",
+    description: "SERP-informed H2/H3 outlines with word counts",
+    icon: ListBullets,
+  },
+  {
+    key: "seoValidation",
+    label: "SEO Validation",
+    description:
+      "Pass/fail checklist for titles, headings, links, OG, and schema",
+    icon: ListChecks,
+  },
 ] as const;
 
 export function ToolNavDropdown({
@@ -110,6 +127,8 @@ export function ToolNavDropdown({
     geoAeo: geoAeoHref,
     promptAnalyzer: promptAnalyzerHref,
     crawlMonitor: crawlMonitorHref,
+    contentOutline: "/content-outline",
+    seoValidation: "/seo-validation",
   };
 
   return (

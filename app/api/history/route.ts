@@ -15,6 +15,10 @@ const ALLOWED_TOOLS = new Set([
   "geo-aeo",
   "google-indexing",
   "prompt-analyzer",
+  "content-optimizer",
+  "content-strategy",
+  "content-brief",
+  "seo-validation",
 ]);
 
 function validateTool(tool: string | null): string | null {
@@ -28,7 +32,10 @@ export async function GET(req: Request) {
     const params = new URL(req.url).searchParams;
     const tool = validateTool(params.get("tool"));
     if (!tool) {
-      return NextResponse.json({ error: "Invalid or missing tool" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid or missing tool" },
+        { status: 400 },
+      );
     }
 
     const rows = await sql`
@@ -67,7 +74,10 @@ export async function POST(req: Request) {
     const providedId: string | undefined = body?.id;
 
     if (!tool) {
-      return NextResponse.json({ error: "Invalid or missing tool" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid or missing tool" },
+        { status: 400 },
+      );
     }
     if (!label || typeof label !== "string") {
       return NextResponse.json({ error: "Missing label" }, { status: 400 });

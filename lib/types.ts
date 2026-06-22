@@ -46,6 +46,7 @@ export interface ContentRelevanceAudit {
   targetKeyword: string;
   sourceType?: "draft" | "url";
   sourceUrl?: string;
+  wasAutoDetected?: boolean;
   detectedIntent: string;
   intentMatchScore: number;
   relevanceScore: number;
@@ -272,4 +273,134 @@ export interface PromptAnalysis {
   criticalGaps: string[];
   searchQueries?: string[];
   contentChecks?: ContentCheck[];
+}
+
+// ── Content Relevance Suite (Optimizer, Strategy, Brief) ──
+
+export interface ContentOptimizerResult {
+  optimizedContent: string;
+  optimizedTitle: string;
+  optimizedMetaDescription: string;
+  keyChanges: string[];
+  improvedScores: {
+    estimatedRelevanceScore: number;
+    estimatedIntentMatchScore: number;
+  };
+}
+
+export interface ClusterTopic {
+  topic: string;
+  type: "pillar" | "supporting" | "cluster";
+  targetKeywords?: string[];
+  rationale?: string;
+}
+
+export interface TopicCluster {
+  pillarTopic: string;
+  clusterTopics: ClusterTopic[];
+  internalLinkingStrategy: string;
+}
+
+export interface AudienceMapping {
+  primaryAudience: string;
+  personaDetails: string;
+  contentPreferences: string[];
+  searchBehavior: string;
+  painPoints: string[];
+}
+
+export interface CompetitorInsight {
+  name: string;
+  angle: string;
+  gapToExploit: string;
+  strengths: string[];
+  weaknesses: string[];
+}
+
+export interface CompetitiveLandscape {
+  topCompetitors: CompetitorInsight[];
+  marketPositioning: string;
+  contentDifferentiation: string[];
+}
+
+export interface ContentStrategyResult {
+  topicCluster: TopicCluster;
+  audienceMapping: AudienceMapping;
+  competitiveLandscape: CompetitiveLandscape;
+}
+
+export interface BriefOutlineItem {
+  heading: string;
+  hLevel: "h2" | "h3" | "h4";
+  keyPoints: string[];
+  targetKeywords?: string[];
+  estimatedWordCount?: number;
+}
+
+export interface ContentBriefResult {
+  workingTitle: string;
+  targetKeywords: {
+    primary: string;
+    secondary: string[];
+    related: string[];
+  };
+  searchIntent: string;
+  outline: BriefOutlineItem[];
+  writingGuidelines: string[];
+  suggestedMedia: string[];
+  estimatedReadingTime: string;
+  seoRecommendations: string[];
+  questionsToAnswer?: string[];
+}
+
+export interface SerpResult {
+  url: string;
+  title: string;
+  headings: string[];
+}
+
+// ── SEO Validation ──
+
+export type SeoValidationStatus = "pass" | "fail" | "warning";
+
+export interface PlatformFix {
+  platform: string;
+  steps: string[];
+}
+
+export interface SeoCheckItem {
+  label: string;
+  status: SeoValidationStatus;
+  value?: string;
+  recommendation?: string;
+  platformFixes?: PlatformFix[];
+}
+
+export interface SeoCategory {
+  id: string;
+  label: string;
+  icon: string;
+  checks: SeoCheckItem[];
+}
+
+export interface SeoValidationResult {
+  url?: string;
+  overallScore: number;
+  passCount: number;
+  totalCount: number;
+  categories: SeoCategory[];
+  criticalIssues: string[];
+  summary: string;
+}
+
+export interface ContentOutlineResult {
+  targetKeyword: string;
+  serpAnalysis: {
+    topResults: SerpResult[];
+    commonHeadingPatterns: string[];
+    contentGaps: string[];
+  };
+  recommendedOutline: BriefOutlineItem[];
+  totalEstimatedWords: number;
+  seoTips: string[];
 }

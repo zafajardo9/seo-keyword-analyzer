@@ -1,4 +1,10 @@
-import { clampScore, generateGeminiText, getGeminiApiKey, parseJsonSafely } from "@/lib/gemini";
+import {
+  clampScore,
+  generateGeminiText,
+  getGeminiApiKey,
+  parseJsonSafely,
+  classifyApiError,
+} from "@/lib/gemini";
 import { ContentRelevanceAudit } from "@/lib/types";
 import { scrapePage } from "@/lib/scrape-page";
 
@@ -18,10 +24,16 @@ interface RawContentRelevanceAudit {
 
 function normalizeList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  return value.filter(
+    (item): item is string =>
+      typeof item === "string" && item.trim().length > 0,
+  );
 }
 
-function normalizeAudit(raw: RawContentRelevanceAudit | null, targetKeyword: string): ContentRelevanceAudit | null {
+function normalizeAudit(
+  raw: RawContentRelevanceAudit | null,
+  targetKeyword: string,
+): ContentRelevanceAudit | null {
   if (!raw || typeof raw !== "object") return null;
 
   return {
@@ -39,13 +51,36 @@ function normalizeAudit(raw: RawContentRelevanceAudit | null, targetKeyword: str
   };
 }
 
+async function detectKeyword(
+  content: string,
+  model: string,
+  apiKey: string,
+): Promise<string> {
+  const prompt = `Analyze this content and identify the single best target keyword that this page should rank for. Choose a keyword that:
+- Has clear search intent (informational, commercial, etc.)
+- Is specific enough to be actionable (not overly broad like "marketing")
+- Matches the primary topic of the content
+
+Content:
+${content.slice(0, 5000)}
+
+Return ONLY a single keyword phrase. No explanation, no JSON, just the keyword.`;
+
+  const text = await generateGeminiText(model, prompt, apiKey, {
+    temperature: 0.3,
+    maxOutputTokens: 100,
+  });
+
+  return text.replace(/[\n"']/g, "").trim() || "content";
+}
+
 export async function POST(request: Request) {
   try {
     const { keyword, draft, url, model, apiKey } = await request.json();
     const key = await getGeminiApiKey(apiKey);
 
-    if (!keyword || !model) {
-      return Response.json({ error: "keyword and model are required" }, { status: 400 });
+    if (!model) {
+      return Response.json({ error: "model is required" }, { status: 400 });
     }
 
     const trimmedDraft = String(draft ?? "").trim();
@@ -54,7 +89,7 @@ export async function POST(request: Request) {
     if (!trimmedDraft && !trimmedUrl) {
       return Response.json(
         { error: "Provide either draft content or a public URL to analyze." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -63,15 +98,19 @@ export async function POST(request: Request) {
 
     if (trimmedUrl) {
       const scraped = await scrapePage(trimmedUrl);
-      const h1Summary = scraped.headings.h1.length > 0
-        ? scraped.headings.h1.join(" | ")
-        : "No H1 headings found";
+      const h1Summary =
+        scraped.headings.h1.length > 0
+          ? scraped.headings.h1.join(" | ")
+          : "No H1 headings found";
       const bodySummary = scraped.bodyText.trim();
 
       if (bodySummary.length < 120) {
         return Response.json(
-          { error: "The page did not contain enough body content to judge relevance." },
-          { status: 400 }
+          {
+            error:
+              "The page did not contain enough body content to judge relevance.",
+          },
+          { status: 400 },
         );
       }
 
@@ -85,24 +124,35 @@ ${bodySummary.slice(0, 9000)}`;
     } else {
       if (trimmedDraft.length < 120) {
         return Response.json(
-          { error: "Draft content is too short. Please paste at least a paragraph or a short outline." },
-          { status: 400 }
+          {
+            error:
+              "Draft content is too short. Please paste at least a paragraph or a short outline.",
+          },
+          { status: 400 },
         );
       }
 
       contentForAudit = trimmedDraft.slice(0, 9000);
     }
 
+    // Auto-detect keyword if not provided by the user
+    const rawKeyword = String(keyword ?? "").trim();
+    const detectedKeyword =
+      rawKeyword.length > 0
+        ? rawKeyword
+        : await detectKeyword(contentForAudit, model, key);
+    const finalKeyword = rawKeyword || detectedKeyword;
+
     const prompt = `You are an expert SEO editor and search intent evaluator. Be extremely concise — no unnecessary elaboration.
 
-Target keyword: ${String(keyword).trim()}
+Target keyword: ${finalKeyword}
 
 Content to evaluate:
 ${contentForAudit}
 
 Return ONLY valid JSON using this exact structure:
 {
-  "targetKeyword": "repeat the target keyword",
+  "targetKeyword": "${finalKeyword}",
   "detectedIntent": "informational | commercial investigation | transactional | navigational | mixed",
   "intentMatchScore": 0,
   "relevanceScore": 0,
@@ -129,19 +179,26 @@ Scoring guidance:
     });
 
     const parsed = parseJsonSafely<RawContentRelevanceAudit>(rawText);
-    const audit = normalizeAudit(parsed, String(keyword).trim());
+    const audit = normalizeAudit(parsed, finalKeyword);
 
     if (!audit) {
-      return Response.json({ error: "Failed to parse relevance audit response" }, { status: 500 });
+      return Response.json(
+        { error: "Failed to parse relevance audit response" },
+        { status: 500 },
+      );
     }
 
     audit.sourceType = sourceType;
     audit.sourceUrl = sourceType === "url" ? trimmedUrl : undefined;
+    audit.wasAutoDetected = rawKeyword.length === 0;
 
-    return Response.json({ audit });
+    return Response.json({ audit, detectedKeyword: finalKeyword });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    const status = /valid URL|HTTP and HTTPS|Failed to fetch page|Invalid URL|enough body content/.test(message) ? 400 : 500;
-    return Response.json({ error: message }, { status });
+    const classified = classifyApiError(message);
+    return Response.json(
+      { error: classified.error, detail: classified.detail },
+      { status: classified.status },
+    );
   }
 }

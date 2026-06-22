@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
 import { SharedReportView } from "@/components/shared-report-view";
-import { GeoAeoAudit, PromptAnalysis } from "@/lib/types";
+import {
+  GeoAeoAudit,
+  PromptAnalysis,
+  ContentOptimizerResult,
+  ContentStrategyResult,
+  ContentBriefResult,
+} from "@/lib/types";
 
 interface SharedReport {
   shareKey: string;
@@ -13,9 +19,10 @@ interface SharedReport {
 
 async function getReport(shareKey: string): Promise<SharedReport | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000";
+    const baseUrl =
+      (process.env.NEXT_PUBLIC_BASE_URL ?? process.env.VERCEL_URL)
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000";
 
     const res = await fetch(
       `${baseUrl}/api/share?key=${encodeURIComponent(shareKey)}`,
@@ -45,8 +52,35 @@ export default async function SharePage({
       shareKey={report.shareKey}
       viewCount={report.viewCount}
       createdAt={report.createdAt}
-      audit={report.tool === "geo-aeo" ? (report.payload as { audit: GeoAeoAudit }).audit ?? (report.payload as GeoAeoAudit) : null}
-      promptAnalysis={report.tool === "prompt-analyzer" ? (report.payload as { analysis: PromptAnalysis }).analysis ?? null : null}
+      audit={
+        report.tool === "geo-aeo"
+          ? ((report.payload as { audit: GeoAeoAudit }).audit ??
+            (report.payload as GeoAeoAudit))
+          : null
+      }
+      promptAnalysis={
+        report.tool === "prompt-analyzer"
+          ? ((report.payload as { analysis: PromptAnalysis }).analysis ?? null)
+          : null
+      }
+      optimizerResult={
+        report.tool === "content-optimizer"
+          ? ((report.payload as { result: ContentOptimizerResult }).result ??
+            (report.payload as ContentOptimizerResult))
+          : null
+      }
+      strategyResult={
+        report.tool === "content-strategy"
+          ? ((report.payload as { result: ContentStrategyResult }).result ??
+            (report.payload as ContentStrategyResult))
+          : null
+      }
+      briefResult={
+        report.tool === "content-brief"
+          ? ((report.payload as { result: ContentBriefResult }).result ??
+            (report.payload as ContentBriefResult))
+          : null
+      }
     />
   );
 }

@@ -12,8 +12,11 @@ import {
   ChartLineUp,
   GoogleLogo,
   Lightning,
+  ListBullets,
+  ListChecks,
   MagnifyingGlass,
   Notebook,
+  Robot,
   Sparkle,
   Sword,
   TextAlignLeft,
@@ -74,6 +77,24 @@ const TOOLS = [
     href: "/prompt-analyzer",
     icon: TextAlignLeft,
   },
+  {
+    key: "crawl-monitor",
+    label: "AI Crawl Monitor",
+    href: "/crawl-monitor",
+    icon: Robot,
+  },
+  {
+    key: "content-outline",
+    label: "Content Outline",
+    href: "/content-outline",
+    icon: ListBullets,
+  },
+  {
+    key: "seo-validation",
+    label: "SEO Validation",
+    href: "/seo-validation",
+    icon: ListChecks,
+  },
 ] as const;
 
 export function ToolSidebar() {
@@ -95,7 +116,9 @@ export function ToolSidebar() {
 
   // Avoid layout shift on SSR
   if (!mounted) {
-    return <aside className="fixed left-0 top-0 z-40 h-screen w-14 border-r border-border bg-background" />;
+    return (
+      <aside className="fixed left-0 top-0 z-40 h-screen w-14 border-r border-border bg-background" />
+    );
   }
 
   return (

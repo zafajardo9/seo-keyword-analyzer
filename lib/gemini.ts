@@ -164,3 +164,114 @@ export function parseJsonSafely<T>(rawText: string): T | null {
 export function clampScore(score: number): number {
   return Math.max(0, Math.min(100, Math.round(score)));
 }
+
+export interface ApiErrorResponse {
+  error: string;
+  detail?: string;
+  status: number;
+}
+
+/**
+ * Classify a raw error message into a user-friendly API error response.
+ * Returns { error, detail, status } suitable for Response.json.
+ */
+export function classifyApiError(message: string): ApiErrorResponse {
+  // API key not configured at all
+  if (message.includes("GEMINI_API_KEY is not configured")) {
+    return {
+      error:
+        "No Gemini API key found. Please add one in the Settings panel (top-right key icon) or set the GEMINI_API_KEY environment variable.",
+      detail: message,
+      status: 401,
+    };
+  }
+
+  // Invalid / disabled model
+  if (
+    /model|not found|not supported|not found for|not enabled/i.test(message) &&
+    !/valid url|enough body/i.test(message)
+  ) {
+    return {
+      error:
+        "The selected AI model is not available or not enabled for your API key. Try selecting a different model from the dropdown.",
+      detail: message,
+      status: 400,
+    };
+  }
+
+  // Invalid API key
+  if (
+    message.includes("API_KEY_INVALID") ||
+    message.includes("API key not valid") ||
+    /403/.test(message)
+  ) {
+    return {
+      error:
+        "Your Gemini API key is invalid or expired. Go to the Settings panel and update it with a valid key from Google AI Studio.",
+      detail: message,
+      status: 401,
+    };
+  }
+
+  // Rate limit / quota exhausted
+  if (
+    /429|RATE_LIMIT|quota|RESOURCE_EXHAUSTED|too many requests/i.test(message)
+  ) {
+    return {
+      error:
+        "You've hit a Gemini API rate limit or quota. Wait a moment and try again. If this persists, check your billing at Google AI Studio.",
+      detail: message,
+      status: 429,
+    };
+  }
+
+  // Content / URL issues (user-fixable)
+  if (
+    /valid URL|HTTP and HTTPS|Failed to fetch page|Invalid URL|enough body content|too short/i.test(
+      message,
+    )
+  ) {
+    return { error: message, status: 400 };
+  }
+
+  // Network / timeout
+  if (
+    /timeout|timed out|aborted|fetch failed|ENOTFOUND|ECONNREFUSED|network|econnreset|econnrefused|enotfound/i.test(
+      message,
+    )
+  ) {
+    return {
+      error:
+        "The request timed out or could not reach the Gemini API. Check your internet connection and try again. If your content is very long, try a shorter version.",
+      detail: message,
+      status: 504,
+    };
+  }
+
+  // Failed to parse Gemini's response
+  if (message.includes("Failed to parse")) {
+    return {
+      error:
+        "The AI returned an unexpected response. This sometimes happens — just try again, or switch to a different model.",
+      detail: message,
+      status: 500,
+    };
+  }
+
+  // Gemini returned empty content
+  if (message.includes("empty") || message.includes("returned empty")) {
+    return {
+      error:
+        "The AI returned an empty response. Try again with a different model or shorter content.",
+      detail: message,
+      status: 500,
+    };
+  }
+
+  // Default fallback
+  return {
+    error: "Something went wrong. Please try again.",
+    detail: message,
+    status: 500,
+  };
+}
